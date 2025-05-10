@@ -37,16 +37,13 @@ export default function MailItem({
       onClick={() => onSelectMail({ ...mail })}
       className={cn(
         'hover:bg-accent/50 border-accent flex cursor-pointer items-start gap-2 rounded-md border p-3 transition-colors',
-        selectedMailId === mail.id && 'bg-accent',
-        !mail.isRead && 'font-medium'
+        selectedMailId === mail.id && 'bg-accent'
       )}
     >
       <div className='min-w-0 flex-1'>
         <div className='flex items-center justify-between'>
           <div className='flex items-center gap-2'>
-            <span
-              className={cn('truncate text-sm', !mail.isRead && 'font-medium')}
-            >
+            <span className={cn('truncate text-sm', 'font-medium')}>
               {mail.sender.name}
             </span>
           </div>
@@ -58,7 +55,7 @@ export default function MailItem({
         <div className='truncate text-sm'>{mail.subject}</div>
 
         <div className='text-muted-foreground line-clamp-2 text-xs'>
-          {mail.content}
+          {mail.snippet}
         </div>
       </div>
     </div>

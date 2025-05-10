@@ -16,7 +16,7 @@ const sampleEmails: MailItemType[] = [
       email: 'danieljohnson@example.com'
     },
     subject: 'Feedback Request',
-    isRead: true,
+    snippet: 'Lorem ipsum dolor sit amet',
     date: new Date(2022, 9, 22, 9, 30, 0),
     content: `
 # Feedback Request
@@ -43,7 +43,7 @@ Daniel
       email: 'james@example.com'
     },
     subject: 'Re: Conference Registration',
-    isRead: true,
+    snippet: 'Lorem ipsum dolor sit amet',
     date: new Date(2025, 4, 9, 15, 45),
     content: `
 # Conference Registration Confirmed
@@ -68,7 +68,7 @@ James
       email: 'alex@example.com'
     },
     subject: 'Vacation Plans',
-    isRead: true,
+    snippet: 'Lorem ipsum dolor sit amet',
     date: new Date(2025, 4, 8, 10, 15),
     content: `
 # Summer Vacation Plans
@@ -94,7 +94,7 @@ Alex
       email: 'news@tech.com'
     },
     subject: 'This Week in Tech',
-    isRead: false,
+    snippet: 'Lorem ipsum dolor sit amet',
     date: new Date(2025, 4, 7, 8, 0),
     content: `
 # This Week in Tech
@@ -119,7 +119,7 @@ The latest breakthrough in machine learning has researchers excited about potent
       email: 'sarah@example.com'
     },
     subject: 'Project Proposal',
-    isRead: true,
+    snippet: 'Lorem ipsum dolor sit amet',
     date: new Date(2025, 4, 6, 14, 20),
     content: `
 # Project Proposal: Q3 Initiative
@@ -150,7 +150,7 @@ Sarah
       email: 'david@example.com'
     },
     subject: 'Lunch Next Week?',
-    isRead: false,
+    snippet: 'Lorem ipsum dolor sit amet',
     date: new Date(2025, 4, 5, 11, 10),
     content: `
 # Lunch Invitation
@@ -177,7 +177,7 @@ David
       email: 'marketing@company.com'
     },
     subject: 'New Campaign Launch',
-    isRead: true,
+    snippet: 'Lorem ipsum dolor sit amet',
     date: new Date(2025, 4, 4, 16, 30),
     content: `
 # Marketing Campaign Launch
