@@ -2,17 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Star, RefreshCcw, MoreVertical, StarOff } from 'lucide-react';
+import { Search, RefreshCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Avatar } from '@/components/ui/avatar';
-import { Checkbox } from '@/components/ui/checkbox';
-import { cn } from '@/lib/utils';
-import { MailItem as MailItemType } from '@/types/mail';
 import MailItem from './mail-item';
+import { Mail } from '@/types/mail';
 
 // Sample email data
-const sampleEmails: MailItemType[] = [
+const sampleEmails: Mail[] = [
   {
     id: '1',
     sender: {
@@ -25,7 +21,24 @@ const sampleEmails: MailItemType[] = [
     isRead: true,
     isStarred: true,
     date: new Date(2022, 9, 22, 9, 30, 0), // Oct 22, 2022
-    labels: ['work']
+    labels: ['work'],
+    content: `
+# Feedback Request
+
+Hello,
+
+I'd like your feedback on the latest project deliverables. We've made significant progress on the following areas:
+
+## Key Achievements
+- Implemented the new user dashboard
+- Fixed 15+ critical bugs
+- Improved performance by 30%
+
+Could you please review the changes by **Friday** and let me know your thoughts?
+
+Thanks,
+Daniel
+        `
   },
   {
     id: '2',
@@ -39,7 +52,22 @@ const sampleEmails: MailItemType[] = [
     isRead: true,
     isStarred: false,
     date: new Date(2025, 4, 9, 15, 45),
-    labels: ['work', 'conference']
+    labels: ['work', 'conference'],
+    content: `
+# Conference Registration Confirmed
+
+I've completed the registration for the conference next month. The event promises to be a great networking opportunity.
+
+## Event Details
+- **Date:** June 15-17, 2025
+- **Location:** Tech Convention Center
+- **Registration ID:** CONF-2025-1234
+
+Looking forward to attending with you!
+
+Regards,
+James
+        `
   },
   {
     id: '3',
@@ -52,7 +80,23 @@ const sampleEmails: MailItemType[] = [
     isRead: true,
     isStarred: false,
     date: new Date(2025, 4, 8, 10, 15),
-    labels: ['personal']
+    labels: ['personal'],
+    content: `
+# Summer Vacation Plans
+
+Hey there!
+
+I'm planning my vacation for next month. Would you like to join? I'm thinking about:
+
+1. Beach retreat in Hawaii
+2. Mountain hiking in Colorado
+3. City exploring in New York
+
+Let me know what you think!
+
+Best,
+Alex
+        `
   },
   {
     id: '4',
@@ -65,7 +109,22 @@ const sampleEmails: MailItemType[] = [
     isRead: false,
     isStarred: true,
     date: new Date(2025, 4, 7, 8, 0),
-    labels: []
+    labels: [],
+    content: `
+# This Week in Tech
+
+## AI Advancements
+The latest breakthrough in machine learning has researchers excited about potential applications in healthcare.
+
+## New Releases
+- **XPhone 15** - Now with holographic display
+- **DevBook Pro** - The ultimate laptop for developers
+
+## Industry Trends
+> "The future of tech is increasingly focused on sustainability" - Tech Analyst Jane Smith
+
+[Read more on our website](https://example.com)
+        `
   },
   {
     id: '5',
@@ -78,7 +137,28 @@ const sampleEmails: MailItemType[] = [
     isRead: true,
     isStarred: false,
     date: new Date(2025, 4, 6, 14, 20),
-    labels: ['work']
+    labels: ['work'],
+    content: `
+# Project Proposal: Q3 Initiative
+
+Attached is the project proposal we discussed. Please review when you have a chance.
+
+## Objectives
+- Increase user engagement by 25%
+- Reduce system downtime
+- Launch new features by September
+
+## Budget Requirements
+| Item | Cost |
+|------|------|
+| Development | $120,000 |
+| Testing | $45,000 |
+| Marketing | $60,000 |
+
+Please let me know if you need any clarification.
+
+Sarah
+        `
   },
   {
     id: '6',
@@ -92,7 +172,24 @@ const sampleEmails: MailItemType[] = [
     isRead: false,
     isStarred: false,
     date: new Date(2025, 4, 5, 11, 10),
-    labels: ['personal']
+    labels: ['personal'],
+    content: `
+# Lunch Invitation
+
+Hi there,
+
+Would you be available for lunch next week? I'd love to catch up and hear what you've been working on.
+
+I'm free on:
+- Tuesday (12-2pm)
+- Wednesday (1-3pm)
+- Friday (anytime)
+
+There's a new restaurant downtown I've been wanting to try!
+
+Cheers,
+David
+        `
   },
   {
     id: '7',
@@ -105,7 +202,28 @@ const sampleEmails: MailItemType[] = [
     isRead: true,
     isStarred: false,
     date: new Date(2025, 4, 4, 16, 30),
-    labels: ['work']
+    labels: ['work'],
+    content: `
+# Marketing Campaign Launch
+
+Team,
+
+We're launching our new marketing campaign next Monday. Here's what you need to know:
+
+## Campaign Details
+- **Launch Date:** May 11, 2025
+- **Target Audience:** Tech professionals, ages 25-45
+- **Channels:** Social media, email, partner websites
+
+### Key Messaging
+* Focus on productivity benefits
+* Emphasize new AI-powered features
+* Highlight customer success stories
+
+Please review the attached materials and be prepared for our final review meeting on Friday.
+
+Marketing Team
+        `
   }
 ];
 

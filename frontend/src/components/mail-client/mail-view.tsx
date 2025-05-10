@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   ArrowLeft,
   Archive,
@@ -9,15 +9,14 @@ import {
   Reply,
   ReplyAll,
   Forward,
-  Star,
-  Clock,
   Tag,
   MoreHorizontal,
-  ChevronDown,
-  Paperclip
+  ChevronDown
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Mail } from '@/types/mail';
+
+import Markdown from 'react-markdown';
 
 interface MailViewProps {
   mail: Mail;
@@ -36,26 +35,6 @@ export default function MailView({ mail, onBack }: MailViewProps) {
       minute: '2-digit'
     });
   };
-
-  // Sample content (for demo)
-  let content;
-
-  if (mail.id === '1') {
-    content = `
-      <p>Hi there,</p>
-      <p>I'd like your feedback on the latest project deliverables. We've made significant progress, and I value your input to ensure we're on the right track.</p>
-      <p>I've attached the deliverables for your review, and I'm particularly interested in any areas where you think we can further enhance the quality or efficiency.</p>
-      <p>Your feedback is invaluable, and I appreciate your time and expertise. Let's work together to make this project a success.</p>
-      <p>Regards,<br>${mail.sender.name}</p>
-    `;
-  } else {
-    content = `
-      <p>Hi there,</p>
-      <p>${mail.preview}</p>
-      <p>Let me know if you have any questions.</p>
-      <p>Best regards,<br>${mail.sender.name}</p>
-    `;
-  }
 
   return (
     <div className='flex h-full flex-col'>
@@ -98,23 +77,16 @@ export default function MailView({ mail, onBack }: MailViewProps) {
       <div className='border-b p-4'>
         <div className='mb-3 flex items-start justify-between'>
           <h2 className='text-xl font-semibold'>{mail.subject}</h2>
-          <div className='flex items-center gap-2'>
-            <Button variant='ghost' size='icon' className='h-8 w-8'>
-              <Star
-                size={16}
-                className={
-                  mail.isStarred ? 'fill-amber-500 text-amber-500' : ''
-                }
-              />
-            </Button>
-          </div>
         </div>
 
         <div className='flex items-start gap-3'>
           <Avatar className='h-10 w-10'>
-            <div className='bg-primary text-primary-foreground'>
-              {mail.sender.name.charAt(0)}
-            </div>
+            <AvatarFallback>
+              {mail.sender.name
+                .split(' ')
+                .map((x) => x.charAt(0))
+                .concat()}
+            </AvatarFallback>
           </Avatar>
 
           <div className='flex-1'>
@@ -159,43 +131,8 @@ export default function MailView({ mail, onBack }: MailViewProps) {
       </div>
 
       {/* Email body */}
-      <div className='flex-1 overflow-auto p-4'>
-        <div
-          className='prose prose-sm max-w-none'
-          dangerouslySetInnerHTML={{ __html: content }}
-        />
-
-        {/* Attachments (sample) */}
-        <div className='mt-6'>
-          <h3 className='mb-2 flex items-center gap-1 text-sm font-medium'>
-            <Paperclip size={14} />
-            <span>2 Attachments</span>
-          </h3>
-
-          <div className='grid grid-cols-1 gap-2 md:grid-cols-2'>
-            <div className='flex items-center gap-2 rounded-md border p-2'>
-              <div className='bg-muted flex h-10 w-10 items-center justify-center rounded'>
-                <Paperclip size={16} />
-              </div>
-              <div className='min-w-0 flex-1'>
-                <div className='truncate text-sm font-medium'>document.pdf</div>
-                <div className='text-muted-foreground text-xs'>2.4 MB</div>
-              </div>
-            </div>
-
-            <div className='flex items-center gap-2 rounded-md border p-2'>
-              <div className='bg-muted flex h-10 w-10 items-center justify-center rounded'>
-                <Paperclip size={16} />
-              </div>
-              <div className='min-w-0 flex-1'>
-                <div className='truncate text-sm font-medium'>
-                  presentation.pptx
-                </div>
-                <div className='text-muted-foreground text-xs'>4.1 MB</div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className='prose prose-sm max-w-none flex-1 overflow-auto p-4'>
+        <Markdown children={mail.content} />
       </div>
 
       {/* Reply section */}
