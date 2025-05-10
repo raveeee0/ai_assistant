@@ -53,7 +53,7 @@ export default function MailView({
 
   const sendEmail = () => {
     // send post request to api
-    fetch('http://localhost:3000/api/mail/send', {
+    fetch('http://localhost:8000/reply-mail', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -61,9 +61,9 @@ export default function MailView({
       body: JSON.stringify({
         to: mail.sender.email,
         subject: mail.subject,
-        messageId: mail.id,
-        threadId: mail.threadId,
-        content: reply
+        original_message_id: mail.id,
+        thread_id: mail.threadId,
+        message: reply
       })
     })
       .then((data) => {
@@ -205,7 +205,7 @@ export default function MailView({
           disabled={draft?.isLoading}
         ></textarea>
         <div className='mt-2 flex justify-end'>
-          <Button className='gap-1' onClick={() => sendEmail()}>
+          <Button className='cursor-pointer gap-1' onClick={() => sendEmail()}>
             <Reply size={14} /> Send
           </Button>
         </div>

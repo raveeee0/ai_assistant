@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { Request } from '@/types/utils';
 
 export default function MailClientLayout() {
+  const [mails, setMails] = useState<MailItem[]>([]);
   const [selectedMail, setSelectedMail] = useState<MailItem | null>(null);
   const [summary, setSummary] = useState<Request>({
     isLoading: false,
@@ -20,6 +21,47 @@ export default function MailClientLayout() {
     result: null,
     error: false
   });
+
+  useEffect(() => {
+    refreshMails();
+  }, []);
+
+  const refreshMails = () => {
+    fetch('http://127.0.0.1:8000/unread-mails').then((response) => {
+      if (response.ok) {
+        response.json().then((data) => {
+          console.log('Fetched mails:', data);
+          // Convert API response data to MailItem format
+          const formattedMails = data.messages.map(
+            (mail: {
+              message_id: any;
+              thread_id: any;
+              senderName: any;
+              senderEmail: any;
+              subject: any;
+              snippet: any;
+              date: string | number | Date;
+              text: any;
+            }) => ({
+              id: mail.message_id,
+              threadId: mail.thread_id,
+              sender: {
+                name: mail.senderName,
+                email: mail.senderEmail
+              },
+              subject: mail.subject,
+              snippet: mail.snippet,
+              date: new Date(mail.date),
+              content: mail.text
+            })
+          );
+          setMails(formattedMails);
+        });
+      } else {
+        console.error('Failed to fetch mails');
+      }
+    });
+  };
 
   useEffect(() => {
     if (selectedMail) {
@@ -93,6 +135,8 @@ export default function MailClientLayout() {
         <MailList
           onSelectMail={setSelectedMail}
           selectedMailId={selectedMail?.id}
+          mails={mails}
+          refreshMails={refreshMails}
         />
       </div>
 

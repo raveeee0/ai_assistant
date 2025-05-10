@@ -19,7 +19,7 @@ SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
 
 def authenticate():
     creds = None
-    if os.path.exists('../token.json'):
+    if os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
@@ -27,14 +27,14 @@ def authenticate():
         else:
             flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
             creds = flow.run_local_server(port=8080)
-        with open('../token.json', 'w') as token:
+        with open('token.json', 'w') as token:
             token.write(creds.to_json())
     return creds
 
 def create_reply_message(to: str, subject: str, message_text: str, thread_id: str, original_message_id: str):
     message = MIMEText(message_text)
     message['to'] = to
-    message['subject'] = f"Re: {subject}"
+    message['subject'] = subject if subject.startswith("Re: ") else f"Re: {subject}"
     message['In-Reply-To'] = f"<{original_message_id}>"
     message['References'] = f"<{original_message_id}>"
     message['Date'] = formatdate(localtime=True)
@@ -68,7 +68,7 @@ def mark_as_read(service, message_id):
 
 def parse_message(service, msg_id):
     msg = service.users().messages().get(userId='me', id=msg_id, format='full').execute()
-    mark_as_read(service, msg_id)
+    # mark_as_read(service, msg_id)
 
     payload = msg['payload']
     headers = payload.get('headers', [])

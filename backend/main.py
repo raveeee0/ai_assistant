@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from services.gmail_service import (
     authenticate,
     get_unread_messages,
@@ -10,6 +11,15 @@ from services.gmail_service import (
 from googleapiclient.discovery import build
 
 app = FastAPI()
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Allows your frontend origin
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 class EmailReplyRequest(BaseModel):
     to: str
