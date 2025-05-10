@@ -10,18 +10,21 @@ import {
   ReplyAll,
   Forward,
   MoreHorizontal,
-  ChevronDown
+  ChevronDown,
+  Loader2, // Added for loading animation
+  AlertCircle // Added for error icon
 } from 'lucide-react';
 import { MailItem } from '@/types/mail';
 
 import Markdown from 'react-markdown';
 import { useEffect, useState } from 'react';
+import { Request } from '@/types/utils';
 
 interface MailViewProps {
   mail: MailItem;
   onBack: () => void;
-  summary?: { isLoading: boolean; result: string | null };
-  draft?: { isLoading: boolean; result: string | null };
+  summary?: Request;
+  draft?: Request;
 }
 
 export default function MailView({
@@ -31,6 +34,10 @@ export default function MailView({
   draft
 }: MailViewProps) {
   const [reply, setReply] = useState('');
+
+  useEffect(() => {
+    setReply(draft?.result || '');
+  }, [draft]);
 
   // Format date for display
   const formatDate = (date: Date) => {
@@ -54,6 +61,8 @@ export default function MailView({
       body: JSON.stringify({
         to: mail.sender.email,
         subject: mail.subject,
+        messageId: mail.id,
+        threadId: mail.threadId,
         content: reply
       })
     })
@@ -154,9 +163,15 @@ export default function MailView({
           <div className='bg-muted/30 mb-4 rounded-md border p-3'>
             <h3 className='mt-1 mb-1 text-sm font-semibold'>Summary:</h3>
             {summary.isLoading ? (
-              <p className='text-muted-foreground text-sm italic'>
+              <div className='text-muted-foreground flex items-center text-sm italic'>
+                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                 Loading summary...
-              </p>
+              </div>
+            ) : summary.error ? (
+              <div className='text-destructive flex items-center text-sm'>
+                <AlertCircle className='mr-2 h-4 w-4' />
+                {summary.result}
+              </div>
             ) : (
               <div className='text-sm'>
                 <Markdown
@@ -171,11 +186,21 @@ export default function MailView({
 
       {/* Reply section */}
       <div className='border-t p-4'>
+        {draft?.error && (
+          <div className='text-destructive mb-2 flex items-center text-sm'>
+            <AlertCircle className='mr-2 h-4 w-4' />
+            Error loading draft: {draft.error}
+          </div>
+        )}
         <textarea
           className='w-full resize-none rounded-md border p-4'
-          placeholder={'Reply to ' + mail.sender.name + '...'}
+          placeholder={
+            draft?.isLoading
+              ? 'Loading draft...'
+              : 'Reply to ' + mail.sender.name + '...'
+          }
           rows={4}
-          value={reply}
+          value={reply} // Use reply state, fallback to draft result
           onChange={(e) => setReply(e.target.value)}
           disabled={draft?.isLoading}
         ></textarea>

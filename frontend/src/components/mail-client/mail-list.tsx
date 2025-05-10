@@ -11,6 +11,7 @@ import { MailItem as MailItemType } from '@/types/mail';
 const sampleEmails: MailItemType[] = [
   {
     id: '1',
+    threadId: '1',
     sender: {
       name: 'Daniel Johnson',
       email: 'danieljohnson@example.com'
@@ -38,6 +39,7 @@ Daniel
   },
   {
     id: '2',
+    threadId: '1',
     sender: {
       name: 'James Martin',
       email: 'james@example.com'
@@ -53,7 +55,8 @@ I've completed the registration for the conference next month. The event promise
 ## Event Details
 - **Date:** June 15-17, 2025
 - **Location:** Tech Convention Center
-- **Registration ID:** CONF-2025-1234
+- **Registration ID:** CONF
+threadId: '1',-2025-1234
 
 Looking forward to attending with you!
 
@@ -63,6 +66,7 @@ James
   },
   {
     id: '3',
+    threadId: '1',
     sender: {
       name: 'Alex Johnson',
       email: 'alex@example.com'
@@ -89,6 +93,7 @@ Alex
   },
   {
     id: '4',
+    threadId: '1',
     sender: {
       name: 'Tech Newsletter',
       email: 'news@tech.com'
@@ -114,6 +119,7 @@ The latest breakthrough in machine learning has researchers excited about potent
   },
   {
     id: '5',
+    threadId: '1',
     sender: {
       name: 'Sarah Wilson',
       email: 'sarah@example.com'
@@ -145,6 +151,7 @@ Sarah
   },
   {
     id: '6',
+    threadId: '1',
     sender: {
       name: 'David Brown',
       email: 'david@example.com'
@@ -172,6 +179,7 @@ David
   },
   {
     id: '7',
+    threadId: '1',
     sender: {
       name: 'Marketing Team',
       email: 'marketing@company.com'

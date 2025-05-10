@@ -6,23 +6,26 @@ import { MailItem } from '@/types/mail';
 import MailList from './mail-list';
 import MailView from './mail-view';
 import { cn } from '@/lib/utils';
+import { Request } from '@/types/utils';
 
 export default function MailClientLayout() {
   const [selectedMail, setSelectedMail] = useState<MailItem | null>(null);
-  const [summary, setSummary] = useState<{
-    isLoading: boolean;
-    result: string | null;
-  }>({ isLoading: false, result: null });
-  const [draft, setDraft] = useState<{
-    isLoading: boolean;
-    result: string | null;
-  }>({ isLoading: false, result: null });
+  const [summary, setSummary] = useState<Request>({
+    isLoading: false,
+    result: null,
+    error: false
+  });
+  const [draft, setDraft] = useState<Request>({
+    isLoading: false,
+    result: null,
+    error: false
+  });
 
   useEffect(() => {
     if (selectedMail) {
       // Reset summary and draft when a new mail is selected
-      setSummary({ isLoading: true, result: null });
-      setDraft({ isLoading: true, result: null });
+      setSummary({ isLoading: true, result: null, error: false });
+      setDraft({ isLoading: true, result: null, error: false });
 
       // Call the API to get the summary
       fetch(`http://localhost:3000/api/mail/${selectedMail.id}/summary`)
@@ -33,11 +36,15 @@ export default function MailClientLayout() {
           throw new Error('Failed to fetch summary');
         })
         .then((data) => {
-          setSummary({ isLoading: false, result: data.summary });
+          setSummary({ isLoading: false, result: data.summary, error: false });
         })
         .catch((error) => {
           console.error(error);
-          setSummary({ isLoading: false, result: 'Error loading summary.' });
+          setSummary({
+            isLoading: false,
+            result: 'Error loading summary.',
+            error: true
+          });
         });
 
       // Call the API to get the draft
@@ -49,16 +56,20 @@ export default function MailClientLayout() {
           throw new Error('Failed to fetch draft');
         })
         .then((data) => {
-          setDraft({ isLoading: false, result: data.draft });
+          setDraft({ isLoading: false, result: data.draft, error: false });
         })
         .catch((error) => {
           console.error(error);
-          setDraft({ isLoading: false, result: 'Error loading draft.' });
+          setDraft({
+            isLoading: false,
+            result: 'Error loading draft.',
+            error: true
+          });
         });
     } else {
       // Clear summary and draft if no mail is selected
-      setSummary({ isLoading: false, result: null });
-      setDraft({ isLoading: false, result: null });
+      setSummary({ isLoading: false, result: null, error: false });
+      setDraft({ isLoading: false, result: null, error: false });
     }
 
     return () => {};
