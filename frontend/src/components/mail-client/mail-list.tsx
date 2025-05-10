@@ -5,10 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Search, RefreshCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import MailItem from './mail-item';
-import { Mail } from '@/types/mail';
+import { MailItem as MailItemType } from '@/types/mail';
 
 // Sample email data
-const sampleEmails: Mail[] = [
+const sampleEmails: MailItemType[] = [
   {
     id: '1',
     sender: {
@@ -16,12 +16,8 @@ const sampleEmails: Mail[] = [
       email: 'danieljohnson@example.com'
     },
     subject: 'Feedback Request',
-    preview:
-      "I'd like your feedback on the latest project deliverables. We've made significant progress...",
     isRead: true,
-    isStarred: true,
-    date: new Date(2022, 9, 22, 9, 30, 0), // Oct 22, 2022
-    labels: ['work'],
+    date: new Date(2022, 9, 22, 9, 30, 0),
     content: `
 # Feedback Request
 
@@ -47,12 +43,8 @@ Daniel
       email: 'james@example.com'
     },
     subject: 'Re: Conference Registration',
-    preview:
-      "I've completed the registration for the conference next month. The event promises to be a great networking opportunity...",
     isRead: true,
-    isStarred: false,
     date: new Date(2025, 4, 9, 15, 45),
-    labels: ['work', 'conference'],
     content: `
 # Conference Registration Confirmed
 
@@ -76,11 +68,8 @@ James
       email: 'alex@example.com'
     },
     subject: 'Vacation Plans',
-    preview: "I'm planning my vacation for next month. Would you like to join?",
     isRead: true,
-    isStarred: false,
     date: new Date(2025, 4, 8, 10, 15),
-    labels: ['personal'],
     content: `
 # Summer Vacation Plans
 
@@ -105,11 +94,8 @@ Alex
       email: 'news@tech.com'
     },
     subject: 'This Week in Tech',
-    preview: 'The latest tech news: AI advancements, new gadget releases...',
     isRead: false,
-    isStarred: true,
     date: new Date(2025, 4, 7, 8, 0),
-    labels: [],
     content: `
 # This Week in Tech
 
@@ -133,11 +119,8 @@ The latest breakthrough in machine learning has researchers excited about potent
       email: 'sarah@example.com'
     },
     subject: 'Project Proposal',
-    preview: 'Attached is the project proposal we discussed. Please review...',
     isRead: true,
-    isStarred: false,
     date: new Date(2025, 4, 6, 14, 20),
-    labels: ['work'],
     content: `
 # Project Proposal: Q3 Initiative
 
@@ -167,12 +150,8 @@ Sarah
       email: 'david@example.com'
     },
     subject: 'Lunch Next Week?',
-    preview:
-      "Would you be available for lunch next week? I'd love to catch up...",
     isRead: false,
-    isStarred: false,
     date: new Date(2025, 4, 5, 11, 10),
-    labels: ['personal'],
     content: `
 # Lunch Invitation
 
@@ -198,11 +177,8 @@ David
       email: 'marketing@company.com'
     },
     subject: 'New Campaign Launch',
-    preview: "We're launching our new marketing campaign next Monday...",
     isRead: true,
-    isStarred: false,
     date: new Date(2025, 4, 4, 16, 30),
-    labels: ['work'],
     content: `
 # Marketing Campaign Launch
 

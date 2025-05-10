@@ -1,10 +1,6 @@
 import { cn } from '@/lib/utils';
 import { MailItem as MailItemType } from '@/types/mail';
 import React from 'react';
-import { Button } from '../ui/button';
-import { Avatar } from '../ui/avatar';
-import { Checkbox } from '../ui/checkbox';
-import { Star, StarOff } from 'lucide-react';
 
 interface Props {
   mail: MailItemType;
@@ -62,7 +58,7 @@ export default function MailItem({
         <div className='truncate text-sm'>{mail.subject}</div>
 
         <div className='text-muted-foreground line-clamp-2 text-xs'>
-          {mail.preview}
+          {mail.content}
         </div>
       </div>
     </div>

@@ -9,17 +9,15 @@ import {
   Reply,
   ReplyAll,
   Forward,
-  Tag,
   MoreHorizontal,
   ChevronDown
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { Mail } from '@/types/mail';
+import { MailItem } from '@/types/mail';
 
 import Markdown from 'react-markdown';
 
 interface MailViewProps {
-  mail: Mail;
+  mail: MailItem;
   onBack: () => void;
 }
 
@@ -115,23 +113,12 @@ export default function MailView({ mail, onBack }: MailViewProps) {
                 Show details <ChevronDown size={12} />
               </Button>
             </div>
-
-            {mail.labels && mail.labels.length > 0 && (
-              <div className='mt-2 flex flex-wrap gap-1'>
-                {mail.labels.map((label, i) => (
-                  <Badge key={i} variant='outline' className='text-xs'>
-                    <Tag size={10} className='mr-1' />
-                    {label}
-                  </Badge>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       </div>
 
       {/* Email body */}
-      <div className='prose prose-sm max-w-none flex-1 overflow-auto p-4'>
+      <div className='prose prose-invert prose-sm max-w-none flex-1 overflow-auto p-4'>
         <Markdown children={mail.content} />
       </div>
 

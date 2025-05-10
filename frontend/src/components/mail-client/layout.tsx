@@ -1,14 +1,47 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Sidebar from './sidebar';
-import { Mail } from '@/types/mail';
+import { MailItem } from '@/types/mail';
 import MailList from './mail-list';
 import MailView from './mail-view';
 import { cn } from '@/lib/utils';
 
 export default function MailClientLayout() {
-  const [selectedMail, setSelectedMail] = useState<Mail | null>(null);
+  const [selectedMail, setSelectedMail] = useState<MailItem | null>(null);
+  const [summary, setSummary] = useState<string | null>(null);
+  const [draft, setDraft] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (selectedMail) {
+      // Call the API to get the summary and draft
+      fetch(`http://localhost:3000/api/mail/${selectedMail.id}/summary`).then(
+        (response) => {
+          if (response.ok) {
+            response.json().then((data) => {
+              setSummary(data.summary);
+            });
+          } else {
+            console.error('Failed to fetch summary');
+          }
+        }
+      );
+
+      fetch(`http://localhost:3000/api/mail/${selectedMail.id}/draft`).then(
+        (response) => {
+          if (response.ok) {
+            response.json().then((data) => {
+              setDraft(data.draft);
+            });
+          } else {
+            console.error('Failed to fetch draft');
+          }
+        }
+      );
+    }
+
+    return () => {};
+  }, [selectedMail]);
 
   return (
     <div className='flex flex-1 overflow-hidden'>
