@@ -15,6 +15,7 @@ import {
 import { MailItem } from '@/types/mail';
 
 import Markdown from 'react-markdown';
+import { useEffect, useState } from 'react';
 
 interface MailViewProps {
   mail: MailItem;
@@ -29,6 +30,8 @@ export default function MailView({
   summary,
   draft
 }: MailViewProps) {
+  const [reply, setReply] = useState('');
+
   // Format date for display
   const formatDate = (date: Date) => {
     return date.toLocaleString([], {
@@ -39,6 +42,27 @@ export default function MailView({
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const sendEmail = () => {
+    // send post request to api
+    fetch('http://localhost:3000/api/mail/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        to: mail.sender.email,
+        subject: mail.subject,
+        content: reply
+      })
+    })
+      .then((data) => {
+        console.log('Email sent successfully:', data);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
   };
 
   return (
@@ -149,17 +173,14 @@ export default function MailView({
       <div className='border-t p-4'>
         <textarea
           className='w-full resize-none rounded-md border p-4'
-          placeholder={
-            draft?.isLoading
-              ? 'Loading draft...'
-              : draft?.result || 'Reply ' + mail.sender.name + '...'
-          }
+          placeholder={'Reply to ' + mail.sender.name + '...'}
           rows={4}
-          defaultValue={draft?.result || ''}
+          value={reply}
+          onChange={(e) => setReply(e.target.value)}
           disabled={draft?.isLoading}
         ></textarea>
         <div className='mt-2 flex justify-end'>
-          <Button className='gap-1'>
+          <Button className='gap-1' onClick={() => sendEmail()}>
             <Reply size={14} /> Send
           </Button>
         </div>
