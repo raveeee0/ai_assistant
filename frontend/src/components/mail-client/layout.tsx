@@ -9,35 +9,56 @@ import { cn } from '@/lib/utils';
 
 export default function MailClientLayout() {
   const [selectedMail, setSelectedMail] = useState<MailItem | null>(null);
-  const [summary, setSummary] = useState<string | null>(null);
-  const [draft, setDraft] = useState<string | null>(null);
+  const [summary, setSummary] = useState<{
+    isLoading: boolean;
+    result: string | null;
+  }>({ isLoading: false, result: null });
+  const [draft, setDraft] = useState<{
+    isLoading: boolean;
+    result: string | null;
+  }>({ isLoading: false, result: null });
 
   useEffect(() => {
     if (selectedMail) {
-      // Call the API to get the summary and draft
-      fetch(`http://localhost:3000/api/mail/${selectedMail.id}/summary`).then(
-        (response) => {
-          if (response.ok) {
-            response.json().then((data) => {
-              setSummary(data.summary);
-            });
-          } else {
-            console.error('Failed to fetch summary');
-          }
-        }
-      );
+      // Reset summary and draft when a new mail is selected
+      setSummary({ isLoading: true, result: null });
+      setDraft({ isLoading: true, result: null });
 
-      fetch(`http://localhost:3000/api/mail/${selectedMail.id}/draft`).then(
-        (response) => {
+      // Call the API to get the summary
+      fetch(`http://localhost:3000/api/mail/${selectedMail.id}/summary`)
+        .then((response) => {
           if (response.ok) {
-            response.json().then((data) => {
-              setDraft(data.draft);
-            });
-          } else {
-            console.error('Failed to fetch draft');
+            return response.json();
           }
-        }
-      );
+          throw new Error('Failed to fetch summary');
+        })
+        .then((data) => {
+          setSummary({ isLoading: false, result: data.summary });
+        })
+        .catch((error) => {
+          console.error(error);
+          setSummary({ isLoading: false, result: 'Error loading summary.' });
+        });
+
+      // Call the API to get the draft
+      fetch(`http://localhost:3000/api/mail/${selectedMail.id}/draft`)
+        .then((response) => {
+          if (response.ok) {
+            return response.json();
+          }
+          throw new Error('Failed to fetch draft');
+        })
+        .then((data) => {
+          setDraft({ isLoading: false, result: data.draft });
+        })
+        .catch((error) => {
+          console.error(error);
+          setDraft({ isLoading: false, result: 'Error loading draft.' });
+        });
+    } else {
+      // Clear summary and draft if no mail is selected
+      setSummary({ isLoading: false, result: null });
+      setDraft({ isLoading: false, result: null });
     }
 
     return () => {};
@@ -67,7 +88,12 @@ export default function MailClientLayout() {
       {/* Mail View */}
       <div className='bg-background flex-1 overflow-hidden'>
         {selectedMail ? (
-          <MailView mail={selectedMail} onBack={() => setSelectedMail(null)} />
+          <MailView
+            mail={selectedMail}
+            onBack={() => setSelectedMail(null)}
+            summary={summary}
+            draft={draft}
+          />
         ) : (
           <div className='text-muted-foreground flex h-full items-center justify-center'>
             Select an email to view

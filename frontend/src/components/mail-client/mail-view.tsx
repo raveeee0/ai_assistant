@@ -19,9 +19,16 @@ import Markdown from 'react-markdown';
 interface MailViewProps {
   mail: MailItem;
   onBack: () => void;
+  summary?: { isLoading: boolean; result: string | null };
+  draft?: { isLoading: boolean; result: string | null };
 }
 
-export default function MailView({ mail, onBack }: MailViewProps) {
+export default function MailView({
+  mail,
+  onBack,
+  summary,
+  draft
+}: MailViewProps) {
   // Format date for display
   const formatDate = (date: Date) => {
     return date.toLocaleString([], {
@@ -119,6 +126,22 @@ export default function MailView({ mail, onBack }: MailViewProps) {
 
       {/* Email body */}
       <div className='prose prose-invert prose-sm max-w-none flex-1 overflow-auto p-4'>
+        {summary && (
+          <div className='bg-muted/30 mb-4 rounded-md border p-3'>
+            <h3 className='mt-1 mb-1 text-sm font-semibold'>Summary:</h3>
+            {summary.isLoading ? (
+              <p className='text-muted-foreground text-sm italic'>
+                Loading summary...
+              </p>
+            ) : (
+              <div className='text-sm'>
+                <Markdown
+                  children={summary.result || 'No summary available.'}
+                />
+              </div>
+            )}
+          </div>
+        )}
         <Markdown children={mail.content} />
       </div>
 
@@ -126,8 +149,14 @@ export default function MailView({ mail, onBack }: MailViewProps) {
       <div className='border-t p-4'>
         <textarea
           className='w-full resize-none rounded-md border p-4'
-          placeholder='Reply Daniel Johnson...'
+          placeholder={
+            draft?.isLoading
+              ? 'Loading draft...'
+              : draft?.result || 'Reply ' + mail.sender.name + '...'
+          }
           rows={4}
+          defaultValue={draft?.result || ''}
+          disabled={draft?.isLoading}
         ></textarea>
         <div className='mt-2 flex justify-end'>
           <Button className='gap-1'>
