@@ -17,10 +17,10 @@ except LookupError:
 
 # === CONFIG ===
 DATA_PATHS = {
-    "../data/kb.txt": "txt",
-    "../data/company_policies.pdf": "pdf",
-    "../data/product_info.txt": "txt",
-    "../data/daily_reports_01052025.csv": "csv",
+    "backend/services/data/kb.txt": "txt",
+    # "../data/company_policies.pdf": "pdf",
+    # "../data/product_info.txt": "txt",
+    # "../data/daily_reports_01052025.csv": "csv",
     # Aggiungi qui altri file e i loro tipi
 }
 INDEX_PATH = "faiss_index"

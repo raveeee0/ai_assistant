@@ -2,3 +2,7 @@
 .env
 .DS_Store
 .idea/
+./__pycache__/
+*.pyc
+
+faiss_index/

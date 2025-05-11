@@ -8,8 +8,13 @@ import logging
 import random
 from dotenv import load_dotenv
 
+# print executing directory
+print(f"Executing directory: {os.getcwd()}")
 
 
+from backend.services.RAG.rag_service import RAGModule
+# Initialize RAG module
+rag = RAGModule(index_path="faiss_index/", model_name="all-MiniLM-L6-v2")
 
 
 # Load environment variables
@@ -98,20 +103,16 @@ def account_management(state: EmailState) -> Dict[str, Any]:
 
 def bug_report(state: EmailState) -> Dict[str, Any]:
     prompt = f"""
-        Analyze bug reports:
-        - Identify affected components
-        - Suggest temporary workarounds
-
         Bug report: {state.email_content}
 
         Output format:
-        summarize the bug
+        summarize the bug without adding any other information, just the bug description
     """
     response = call_gemini(prompt)
     user = g.get_user()
     repo = g.get_repo("bonsurha/EXAMPLE")
     # Get the first project
-    bug_body = response.split(":")[1]
+    bug_body = response
     print(f"Bug body: {bug_body}")
     # Create a new issue in the GitHub repository   
     issue = repo.create_issue(
@@ -123,19 +124,23 @@ def bug_report(state: EmailState) -> Dict[str, Any]:
     return {"bug_analysis": response}
 
 def faq_answer(state: EmailState) -> Dict[str, Any]:
+    rag_response = rag.generate_context(state.email_content)
     prompt = f"""
         Answer common questions using provided documentation:
         [Insert your FAQ document here]
 
         Question: {state.email_content}
+        Provided rag context: {rag_response}
     """
     response = call_gemini(prompt)
 
     return {"faq_answer": response}
 
 def check_compliance(state: EmailState) -> Dict[str, Any]:
+    rag_response = rag.generate_context("What is the company policy for refund requests?")
     prompt = f"""
         Check request {state.email_content} from {state.destination_email} against company policies.
+        Company policy: {rag_response}
         RESPOND WITH ONLY True OR False
     """
     response = call_gemini(prompt)
@@ -185,8 +190,16 @@ def generate_draft(state: EmailState) -> Dict[str, Any]:
     """
     elif state.problem_type == "bug_report":
         prompt = f"""
-        Generate professional email to {state.destination_email} with bug analysis: {state.bug_analysis}
-    """
+        Generate professional email to {state.destination_email} for username: {state.username}
+        
+        Template:
+        Subject: Bug Report Acknowledgment
+        Dear {state.username},
+        Thank you for reporting the issue with our application. We appreciate your feedback and are actively working to resolve it.
+        We have created a ticket for this issue and will keep you updated on its progress. In the meantime, if you have any further information or questions, please feel free to reach out.
+
+        Best regards,
+        Example company"""
     elif state.problem_type == "faq":
         prompt = f"""
         Generate professional email to {state.destination_email} with FAQ answer: {state.faq_answer}
