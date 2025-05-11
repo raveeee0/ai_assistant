@@ -76,7 +76,7 @@ export default function MailView({
 
     // Format the original content with '>' prefix for each line
     const quotedContent = mail.content
-      ? `${quoteHeader}\n>${mail.content.split('\n').join('\n> ')}`
+      ? `${quoteHeader}\n<blockquote>${mail.content}</blockquote>`
       : '';
 
     // Combine reply with quoted original message

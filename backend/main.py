@@ -53,7 +53,7 @@ def get_message_by_rfc822_message_id(service, rfc822_id):
     message_id = messages[0]['id']
     return service.users().messages().get(userId='me', id=message_id, format='full').execute()
 
-def parse_message(message):
+def parsing_message(message):
     headers = message['payload']['headers']
     payload = message['payload']
 
@@ -92,7 +92,7 @@ async def websocket_summary(websocket: WebSocket, mail_id: str):
             await websocket.send_text("❌ Message not found")
             return
 
-        parsed = parse_message(raw_msg)
+        parsed = parsing_message(raw_msg)
 
         # Crea il testo completo
         full_text = f"""Subject: {parsed['subject']}
@@ -129,7 +129,7 @@ async def websocket_draft(websocket: WebSocket, mail_id: str):
             await websocket.send_text("❌ Message not found")
             return
 
-        parsed = parse_message(raw_msg)
+        parsed = parsing_message(raw_msg)
 
         state = EmailState(
             subject=parsed["subject"],
@@ -141,7 +141,7 @@ async def websocket_draft(websocket: WebSocket, mail_id: str):
         stream = process_email(state)
 
         for chunk in stream:
-            await websocket.send_text(chunk)
+            await websocket.send_text(chunk["custom_key"])
             await asyncio.sleep(0.5)
 
     except WebSocketDisconnect:

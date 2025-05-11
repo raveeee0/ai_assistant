@@ -95,7 +95,7 @@ export default function MailClientLayout() {
 
       // Create new WebSocket connections
       summarySocket = new WebSocket(
-        `ws://localhost:8000/summary/${selectedMail.id}/ws`
+        `ws://localhost:8000/summary/${selectedMail.originalMessageId}/ws`
       );
 
       summarySocket.onmessage = (event) => {
@@ -124,7 +124,7 @@ export default function MailClientLayout() {
       };
 
       draftSocket = new WebSocket(
-        `ws://localhost:8000/draft/${selectedMail.id}/ws`
+        `ws://localhost:8000/draft/${selectedMail.originalMessageId}/ws`
       );
 
       draftSocket.onmessage = (event) => {

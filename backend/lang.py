@@ -62,12 +62,10 @@ gemini_model = GoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GOOGL
 def call_gemini(prompt: str, stream: bool = False) -> str:
     logger.info(f"LLM Prompt: {prompt}")
     try:
-        response = ""
-        for chunk in gemini_model.stream(prompt):
-            response += chunk
-            if stream:
-                yield chunk
-        return response
+        if stream:
+            return gemini_model.stream(prompt)
+        else:
+            return gemini_model.invoke(prompt).strip()
     except Exception as e:
         logger.error(f"Error calling Gemini: {e}")
         return f"Error: {str(e)}"
@@ -79,14 +77,14 @@ def call_gemini(prompt: str, stream: bool = False) -> str:
 def categorize_problem(state: EmailState) -> Dict[str, Any]:
 
     writer = get_stream_writer()
-    writer({"custom_key": "<thinking> categorize problem </thinking>"})
 
     prompt = f"""
         Classify the email with subject: {state.subject}, content: {state.email_content} into one of these categories:
-        username_change, password_reset, refund_request, bug_report, faq
+        username_change, password_reset, refund_request, bug_repor or other
     """
     response = call_gemini(prompt)
-
+    category = f"<thinking> categorize problem ... {response} </thinking>"
+    writer({"custom_key": category})
     return {"problem_type": response}
 
 
@@ -127,7 +125,7 @@ def account_management(state: EmailState) -> Dict[str, Any]:
 def bug_report(state: EmailState) -> Dict[str, Any]:
 
     writer = get_stream_writer()
-    writer({"custom_key": "<thinking> create ticket for the bug </thinking>"})
+    writer({"custom_key": "<action> creating ticket for the bug </action>"})
 
     prompt = f"""
         Bug report: {state.email_content}
@@ -153,12 +151,12 @@ def bug_report(state: EmailState) -> Dict[str, Any]:
 def faq_answer(state: EmailState) -> Dict[str, Any]:
 
     writer = get_stream_writer()
-    writer({"custom_key": "<thinking> retrieve data from knoledge based </thinking>"})
+    writer({"custom_key": "<thinking> retrieve data from knowledge based </thinking>"})
 
     rag_response = rag.generate_context(state.email_content)
     prompt = f"""
         Answer common questions using provided documentation:
-        [Insert your FAQ document here]
+        Include just the email body
 
         Question: {state.email_content}
         Provided rag context: {rag_response}
@@ -170,7 +168,7 @@ def faq_answer(state: EmailState) -> Dict[str, Any]:
 def check_compliance(state: EmailState) -> Dict[str, Any]:
 
     writer = get_stream_writer()
-    writer({"custom_key": "<thinking> retrieve data from knoledge based </thinking>"})
+    writer({"custom_key": "<action> retrieving data from knowledge based </action>"})
 
     rag_response = rag.generate_context("What is the company policy for refund requests?")
     prompt = f"""
@@ -182,8 +180,15 @@ def check_compliance(state: EmailState) -> Dict[str, Any]:
     compliant = response.lower() == "true"
     return {"compliant": compliant}
 
-def generate_draft(state: EmailState) -> Dict[str, Any]:
+def refund_request(state: EmailState) -> None:
+    # Verify payments information
 
+    writer = get_stream_writer()
+    writer({"custom_key": "<action> Researching user payment information </action>"})
+    return
+
+def generate_draft(state: EmailState) -> Dict[str, Any]:
+    print("Generating draft...")
     writer = get_stream_writer()
     writer({"custom_key": "<thinking> Generating draft email </thinking>"})
 
@@ -192,8 +197,8 @@ def generate_draft(state: EmailState) -> Dict[str, Any]:
     if state.problem_type == "password_reset":
         prompt = f"""
         Generate professional email to {state.destination_email} with password reset link: {state.link} for username: {state.username}
+        Do not add any subject, just the body of the email.
         Here's a template:
-        Subject: Reset Your Account Password
 
         Dear [User's First Name],
 
@@ -212,8 +217,8 @@ def generate_draft(state: EmailState) -> Dict[str, Any]:
     elif state.problem_type == "username_change":
         prompt = f"""
         Generate professional email to {state.destination_email} with username change link: {state.link} for username: {state.username}
+        Do not add any subject, just the body of the email.
         Here's a template:
-        Subject: Change Your Account Username
 
         Dear [User's First Name],
 
@@ -230,28 +235,30 @@ def generate_draft(state: EmailState) -> Dict[str, Any]:
     elif state.problem_type == "bug_report":
         prompt = f"""
         Generate professional email to {state.destination_email} for username: {state.username}
+        Do not add any subject, just the body of the email.
         
         Template:
-        Subject: Bug Report Acknowledgment
         Dear {state.username},
         Thank you for reporting the issue with our application. We appreciate your feedback and are actively working to resolve it.
         We have created a ticket for this issue and will keep you updated on its progress. In the meantime, if you have any further information or questions, please feel free to reach out.
 
         Best regards,
         Example company"""
-    elif state.problem_type == "faq":
+    elif state.problem_type == "faq" or state.problem_type == "other":
         prompt = f"""
         Generate professional email to {state.destination_email} with FAQ answer: {state.faq_answer}
+        Do not add any subject, just the body of the email.
     """
-    response = call_gemini(prompt)
-    return {"draft": response}
+    elif state.problem_type == "refund_request":
+        prompt = f"""Do not add any subject, just the mail content.
+        Ironic email to not refund the user
 
-def retrieve_solutions(state: EmailState) -> Dict[str, Any]:
-    prompt = f"""
-    Retrieve similar past solutions from knowledge base for: {state.email_content}
     """
-    response = call_gemini(prompt).splitlines()
-    return {"solutions": response}
+    response = call_gemini(prompt, True)
+
+    for chunk in response:
+        writer({"custom_key": chunk})
+    return {"draft": response}
 
 
 
@@ -260,19 +267,16 @@ def retrieve_solutions(state: EmailState) -> Dict[str, Any]:
 # -------------------------------
 
 def route_after_categorization(state: EmailState):
-    if state.is_reply:
-        return "retrieve_solutions"
-    else:
-        if state.problem_type in ["password_reset", "username_change"]:
-            return "account_management"
-        elif state.problem_type == "bug_report":
-            return "bug_report"
-        elif state.problem_type == "refund_request":
-            return "check_compliance"
-        elif state.problem_type == "faq":
-            return "faq_handler"
-        else:
-            return "retrieve_solutions"
+
+    if state.problem_type in ["password_reset", "username_change"]:
+        return "account_management"
+    elif state.problem_type == "bug_report":
+        return "bug_report"
+    elif state.problem_type == "refund_request":
+        return "refund_request"
+    elif state.problem_type == "faq" or state.problem_type == "other":
+        return "faq_handler"
+
 
 # -------------------------------
 # Step 5: Build the Graph
@@ -287,7 +291,8 @@ graph.add_node("bug_report", bug_report)
 graph.add_node("faq_handler", faq_answer)
 graph.add_node("check_compliance", check_compliance)
 graph.add_node("generate_draft", generate_draft)
-graph.add_node("retrieve_solutions", retrieve_solutions)
+graph.add_node("refund_request", refund_request)
+
 
 
 # Set entry point
@@ -302,7 +307,7 @@ graph.add_conditional_edges(
         "bug_report": "bug_report",
         "check_compliance": "check_compliance",
         "faq_handler": "faq_handler",
-        "retrieve_solutions": "retrieve_solutions"
+        "refund_request": "refund_request"
     }
 )
 
@@ -311,6 +316,7 @@ graph.add_edge("account_management", "generate_draft")
 graph.add_edge("bug_report", "generate_draft")
 graph.add_edge("faq_handler", "generate_draft")
 graph.add_edge("check_compliance", "generate_draft")
+graph.add_edge("refund_request", "generate_draft")
 graph.add_edge("generate_draft", END)
 
 # Compile the graph
@@ -322,19 +328,15 @@ app = graph.compile()
 # -------------------------------
 
 def process_email(initial_state: EmailState):
-
-    writer = get_stream_writer()
-    stream = app.stream(initial_state)
-    for chunk in stream:
-        writer(chunk)
+    stream = app.stream(initial_state, stream_mode="custom")
+    return stream
 
 
-def summary_email(state: str) -> Dict[str, Any]:
+def summary_email(state: str) -> [str]:
     prompt = f"""
         Summarize the email content: {state}
         Output format:
         - summary
     """
     stream = call_gemini(prompt, True)
-    for chunk in stream:
-        yield chunk
+    return stream
