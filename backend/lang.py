@@ -1,8 +1,9 @@
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from langgraph.graph import StateGraph, END
+from langgraph.config import get_stream_writer
 from langchain_google_genai import GoogleGenerativeAI
-# from github import Github
+from github import Github
 import os
 import logging
 import random
@@ -20,7 +21,7 @@ rag = RAGModule(index_path="../faiss_index/", model_name="all-MiniLM-L6-v2")
 # Load environment variables
 load_dotenv()
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-# g = Github(os.getenv("GITHUB_TOKEN"))
+g = Github(os.getenv("GITHUB_TOKEN"))
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -76,15 +77,15 @@ def call_gemini(prompt: str, stream: bool = False) -> str:
 # -------------------------------
 
 def categorize_problem(state: EmailState) -> Dict[str, Any]:
+
+    writer = get_stream_writer()  
+    writer({"custom_key": "<thinking> categorize problem </thinking>"})
+
     prompt = f"""
-Classify the email with subject: {state.subject}, content: {state.email_content} into one of these categories:
-username_change, password_reset, refund_request, bug_report, faq
+        Classify the email with subject: {state.subject}, content: {state.email_content} into one of these categories:
+        username_change, password_reset, refund_request, bug_report, faq
     """
     response = call_gemini(prompt)
-
-
-    # update counter of problem types on excel using Google Sheets API
-
 
     return {"problem_type": response}
 
@@ -92,6 +93,10 @@ username_change, password_reset, refund_request, bug_report, faq
 def account_management(state: EmailState) -> Dict[str, Any]:
 
     if "password" in state.problem_type.lower():
+
+        writer = get_stream_writer()  
+        writer({"custom_key": "<thinking> generate password reset link </thinking>"})
+
         def generate_password_reset_link():
             # Generate a secure password reset link that concatenates a random string with the base URL
             base_url = f"https://example.com/reset_"
@@ -100,6 +105,10 @@ def account_management(state: EmailState) -> Dict[str, Any]:
         # Generate a password reset link
         state.link = generate_password_reset_link()
     elif "username" in state.problem_type.lower():
+
+        writer = get_stream_writer()  
+        writer({"custom_key": "<thinking> generate username reset link </thinking>"})
+
         def generate_username_change_link():
             print("Generating username change link")
             # Generate a secure username change link that concatenates a random string with the base URL
@@ -116,6 +125,10 @@ def account_management(state: EmailState) -> Dict[str, Any]:
     return {"link": state.link} 
 
 def bug_report(state: EmailState) -> Dict[str, Any]:
+
+    writer = get_stream_writer()  
+    writer({"custom_key": "<thinking> create ticket for the bug </thinking>"})
+
     prompt = f"""
         Bug report: {state.email_content}
 
@@ -138,6 +151,10 @@ def bug_report(state: EmailState) -> Dict[str, Any]:
     return {"bug_analysis": response}
 
 def faq_answer(state: EmailState) -> Dict[str, Any]:
+
+    writer = get_stream_writer()  
+    writer({"custom_key": "<thinking> retrieve data from knoledge based </thinking>"})
+
     rag_response = rag.generate_context(state.email_content)
     prompt = f"""
         Answer common questions using provided documentation:
@@ -151,6 +168,10 @@ def faq_answer(state: EmailState) -> Dict[str, Any]:
     return {"faq_answer": response}
 
 def check_compliance(state: EmailState) -> Dict[str, Any]:
+
+    writer = get_stream_writer()  
+    writer({"custom_key": "<thinking> retrieve data from knoledge based </thinking>"})
+
     rag_response = rag.generate_context("What is the company policy for refund requests?")
     prompt = f"""
         Check request {state.email_content} from {state.destination_email} against company policies.
@@ -162,6 +183,10 @@ def check_compliance(state: EmailState) -> Dict[str, Any]:
     return {"compliant": compliant}
 
 def generate_draft(state: EmailState) -> Dict[str, Any]:
+
+    writer = get_stream_writer()  
+    writer({"custom_key": "<thinking> Generating draft email </thinking>"})
+
     print(f"Content: {state}")
 
     if state.problem_type == "password_reset":
@@ -304,8 +329,10 @@ def process_email(username: str,email_subject: str, email_body: str, user_email:
         destination_email=user_email,
         is_reply=False
     )
-    final_state = app.stream(initial_state)
-    logger.info("Final Draft:\n%s", final_state["draft"])
+    writer = get_stream_writer()
+    stream = app.stream(initial_state)
+    for chunk in stream:
+        writer(chunk) 
 
 
 def summary_email(state: str) -> Dict[str, Any]:
