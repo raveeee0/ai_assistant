@@ -93,7 +93,7 @@ def account_management(state: EmailState) -> Dict[str, Any]:
     if "password" in state.problem_type.lower():
 
         writer = get_stream_writer()
-        writer({"custom_key": "<thinking> generate password reset link </thinking>"})
+        writer({"custom_key": "<action> generate password reset link </action>"})
 
         def generate_password_reset_link():
             # Generate a secure password reset link that concatenates a random string with the base URL
@@ -105,7 +105,7 @@ def account_management(state: EmailState) -> Dict[str, Any]:
     elif "username" in state.problem_type.lower():
 
         writer = get_stream_writer()
-        writer({"custom_key": "<thinking> generate username reset link </thinking>"})
+        writer({"custom_key": "<action> generate username reset link </action>"})
 
         def generate_username_change_link():
             print("Generating username change link")
@@ -180,7 +180,7 @@ def check_compliance(state: EmailState) -> Dict[str, Any]:
     compliant = response.lower() == "true"
     return {"compliant": compliant}
 
-def refund_request(state: EmailState) -> None:
+def refund_request(state: EmailState):
     # Verify payments information
 
     writer = get_stream_writer()
