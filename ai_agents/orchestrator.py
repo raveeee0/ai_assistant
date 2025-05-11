@@ -20,10 +20,8 @@ load_dotenv()
 # Configure API keys using os.getenv()
 os.environ["GOOGLE_API_KEY"] = os.getenv("GOOGLE_API_KEY", "default_value")
 
-print("Google API Key:", os.getenv("GOOGLE_API_KEY"))
 
-# Logging Setup
-import logging
+
 logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
 
@@ -63,31 +61,36 @@ class EmailProcessorAgent(BaseAgent):
     solution_retriever: LlmAgent
     it_task_generator: LlmAgent
 
+    categories: Dict[str, LlmAgent] = Field(default_factory=dict)
+
+
     def __init__(self, name: str, **kwargs):
         super().__init__(name=name, **kwargs)
 
+        self.categories = {
+            "reset_password": self.account_mgmt_agent,
+            "username_change": self.account_mgmt_agent,
+            "refund_request": self.compliance_checker,
+            "bug_report": self.bug_report_agent
+        }
+
     @override
     async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:
-        print("Starting email processing workflow")
         
         if "email_content" not in ctx.session.state:
             raise ValueError("Email content not found in session state")
         email_content = ctx.session.state["email_content"]
         
-        print(f"Processing email content: {email_content}")
             
         # Check if email is a reply
         is_reply = ctx.session.state.get("is_reply", False)
         
-        print(is_reply)
         
         if is_reply:
             # Handle reply flow with proper event streaming
             async for event in self.handle_reply_flow(ctx):
                 yield event
         else:
-            print(".----------------------------------------")
-            print(ctx.session.state)
             # Handle new email flow with proper event streaming
             async for event in self.handle_new_email_flow(ctx):
                 yield event
@@ -103,13 +106,13 @@ class EmailProcessorAgent(BaseAgent):
             async for event in self.solution_retriever.run_async(ctx):
                 yield event
             summary = ctx.session.state["summary"]
-            logger.info(f"Email summary: {summary}")
+            print(f"Email summary: {summary}")
             
             # Generate IT task
             async for event in self.it_task_generator.run_async(ctx):
                 yield event
         else:
-            logger.info("No persistent issues detected")
+            print("No persistent issues detected")
 
     async def handle_new_email_flow(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:
         # Categorize problem type with event streaming
@@ -117,16 +120,11 @@ class EmailProcessorAgent(BaseAgent):
             yield event
         
         
-        print(ctx.session.state)
-        
         if ctx.session.state["problem_type"].endswith("\n"):
             ctx.session.state["problem_type"] = ctx.session.state["problem_type"][:-1]
             
         problem_type = ctx.session.state["problem_type"]
-        
-        
-        print(ctx.session.state)
-        
+
         if problem_type == "password_reset":
             print("Password reset request detected")
             async for event in self.account_mgmt_agent.run_async(ctx):
@@ -135,6 +133,18 @@ class EmailProcessorAgent(BaseAgent):
             print("Username change request detected")
             async for event in self.account_mgmt_agent.run_async(ctx):
                 yield event
+            
+            if ctx.session.state["account_action"].endswith("\n"):
+                ctx.session.state["account_action"] = ctx.session.state["account_action"][:-1]
+
+            if "password" in ctx.session.state:
+                # Generate password reset link
+                link = "https://example.com/reset-password?token=123456abcdef"
+            elif "username" in ctx.session.state:
+                # Generate username change link
+                link = "https://example.com/change-username?token=123456abcdef"
+
+
         elif problem_type == "refund_request":
             print("Refund request detected")
             async for event in self.compliance_checker.run_async(ctx):
@@ -150,7 +160,7 @@ class EmailProcessorAgent(BaseAgent):
                 async for event in self.draft_generator.run_async(ctx):
                     yield event
                     
-                print(ctx.session.state)
+                print(ctx.session.state["draft"])
                     
                     
         elif problem_type == "bug_report":
@@ -167,15 +177,20 @@ class EmailProcessorAgent(BaseAgent):
         async for event in self.draft_generator.run_async(ctx):
             yield event
         
-        draft = ctx.session.state["draft"]
-        logger.info(f"Draft generated: {draft}") 
     
+        
+        draft = ctx.session.state["draft"]
+        print(f"Draft generated: {draft}") 
+    
+
+
+
 # Define individual agents
 problem_categorizer = LlmAgent(
     name="ProblemCategorizer",
     model=GEMINI_MODEL,
-    instruction="""Classify the email {email_content} into one of these categories:
-    password_reset, username_change, refund_request, bug_report
+    instruction="""Classify the email with subject: {subject}, content: {email_content} into one of these categories:
+    {categories}
     RESPOND WITH ONLY ONE OF THE ABOVE LISTED CATEGORIES
     DO NOT ADD ANY ADDITIONAL CHARACTER""",
     output_key="problem_type"
@@ -186,7 +201,7 @@ account_mgmt_agent = LlmAgent(
     model=GEMINI_MODEL,
     instruction="""Handle account-related requests:
     1. Password reset: Generate secure link
-    2. Username change: Validate new username""",
+    2. Username change: Generate secure link""",
     output_key="account_action"
 )
 
@@ -253,12 +268,14 @@ email_processor = EmailProcessorAgent(
 
 
 # Run the workflow
-def process_email(email: str, user_email: str):
+def process_email(email_subject: str, email_body: str, user_email: str):
     # Setup session
     session_service = InMemorySessionService()
     initial_state = {
-        "email_content": email,
+        "subject": email_subject,
+        "email_content": email_body,
         "destination_email": user_email,
+        "categories": list(email_processor.categories.keys()),
         "is_reply": False
     }
     session = session_service.create_session(
@@ -274,7 +291,6 @@ def process_email(email: str, user_email: str):
         session_service=session_service
     )
     
-    print(f"Processing email: {email}")
     
     events = runner.run(
         user_id=USER_ID,
@@ -288,10 +304,10 @@ def process_email(email: str, user_email: str):
     final_response = "not executed"
     for event in events:
         if event.is_final_response() and event.content and event.content.parts:
-            logger.info(f"Potential final response from [{event.author}]: {event.content.parts[0].text}")
+            print(f"Potential final response from [{event.author}]: {event.content.parts[0].text}")
             final_response = event.content.parts[0].text
             
-    print(f"Final response: {final_response}")
+    # print(f"Final response: {final_response}")
 
 # Example usage
-process_email("Voglio un rimborso, mia madre è morta", "gmail@gmail.com")
+process_email("username change", "I need to change my username","gmail@gmail.com")
