@@ -9,12 +9,14 @@ import os
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=50, chunk_overlap=10)
 
 class RAGModule:
-    def __init__(self, index_path="./faiss_index", model_name="all-MiniLM-L6-v2"):
+    def __init__(self, index_path="../faiss_index", model_name="all-MiniLM-L6-v2"):
         # Embedding + vector store
         self.embedding_model = HuggingFaceEmbeddings(model_name=model_name)
         try:
             self.vectorstore = FAISS.load_local(index_path, self.embedding_model, allow_dangerous_deserialization=True)
         except:
+            print("-------------")
+            print(index_path)
             raise FileNotFoundError(f"L'indice FAISS non è stato trovato in: {index_path}. Esegui prima 'index_all.py'.")
 
 

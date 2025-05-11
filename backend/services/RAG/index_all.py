@@ -15,6 +15,9 @@ try:
 except LookupError:
     nltk.download('punkt')
 
+
+# nltk.download('punkt_tab')
+
 # === CONFIG ===
 DATA_PATHS = {
     "backend/services/data/kb.txt": "txt",

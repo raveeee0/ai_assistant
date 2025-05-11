@@ -2,8 +2,7 @@ from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from langgraph.graph import StateGraph, END
 from langchain_google_genai import GoogleGenerativeAI
-from github import Github
-from fastapi import FastAPI, WebSocket
+# from github import Github
 import os
 import logging
 import random
@@ -13,15 +12,15 @@ from dotenv import load_dotenv
 print(f"Executing directory: {os.getcwd()}")
 
 
-from backend.services.RAG.rag_service import RAGModule
+from services.RAG.rag_service import RAGModule
 # Initialize RAG module
-rag = RAGModule(index_path="faiss_index/", model_name="all-MiniLM-L6-v2")
+rag = RAGModule(index_path="../faiss_index/", model_name="all-MiniLM-L6-v2")
 
 
 # Load environment variables
 load_dotenv()
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-g = Github(os.getenv("GITHUB_TOKEN"))
+# g = Github(os.getenv("GITHUB_TOKEN"))
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -52,7 +51,7 @@ class EmailState(BaseModel):
 # Step 2: Gemini Model Setup
 # -------------------------------
 
-gemini_model = GoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GOOGLE_API_KEY, stream=True)
+gemini_model = GoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GOOGLE_API_KEY)
 
 # def call_gemini(prompt: str) -> str:
 #     logger.info(f"LLM Prompt: {prompt}")
@@ -61,20 +60,17 @@ gemini_model = GoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GOOGL
 
 def call_gemini(prompt: str) -> str:
     logger.info(f"LLM Prompt: {prompt}")
-    full_response = ""
-
-    response = gemini_model.generate_content(prompt, stream=True)
-    
     try:
-        
-        for chunk in response:
-            yield chunk
-            full_response += chunk.text
+        response = ""
+        for chunk in gemini_model.stream(prompt):
+            chunk_text = chunk
+            response += chunk_text
+            print(chunk_text)
+            yield chunk_text
+        return response
     except Exception as e:
-        logger.error(f"Error during streaming: {e}")
-        return ""
-    
-    return full_response
+        logger.error(f"Error calling Gemini: {e}")
+        return f"Error: {str(e)}"
 
 # -------------------------------
 # Step 3: Define Agent Nodes
@@ -315,10 +311,11 @@ def process_email(username: str,email_subject: str, email_body: str, user_email:
 
 def summary_email(state: EmailState) -> Dict[str, Any]:
     prompt = f"""
-        Summarize the email content: {state.email_content}
+        Summarize the email content: {state}
         Output format:
         - summary
     """
     response = call_gemini(prompt)
-    state.summary = response
-    return {"summary": response}
+    for chunk in response:
+        print(chunk)
+        yield chunk

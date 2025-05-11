@@ -1,7 +1,7 @@
 # Esempio di utilizzo (nel tuo script principale o in un altro file)
 from rag_service import RAGModule
 
-rag = RAGModule(index_path="./faiss_index") # Sostituisci con la tua API key
+rag = RAGModule(index_path="../faiss_index") # Sostituisci con la tua API key
 new_query = "['Subject: Re: ciao Andrea Lunghi (andrea.lunghi3@gmail.com) on Sun, 11 May 2025 02:41:45 +0200:Looks good now. Il Dom 11 Mag 2025, 02:41 <inboxgdg@gmail.com> ha scritto:> Error loading draft.> On Sun, May 11, 2025, 02:41 AM Andrea Lunghi andrea.lunghi3@gmail.com> wrote: ciaoneAndrea Lunghi (andrea.lunghi3@gmail.com) on Sun, 11 May 2025 02:41:03 +0200:ciaone]"
 
 context = rag.generate_context(new_query)

@@ -2,7 +2,8 @@ from fastapi import FastAPI, WebSocket
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from backend.services.gmail_service import (
+from lang import summary_email
+from services.gmail_service import (
     authenticate,
     get_unread_messages,
     parse_message,
@@ -17,7 +18,6 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from googleapiclient.discovery import build
 import base64
-import email
 
 app = FastAPI()
 
@@ -46,9 +46,65 @@ async def websocket_endpoint(websocket: WebSocket, mail_id: str):
     await websocket.accept()
 
     # Create the summary and send it by chunk each 0.5 seconds
-    for i in range(5):
-        await asyncio.sleep(0.5)
-        await websocket.send_text(f"Message {i + 1} for summary {mail_id}")
+    stream = summary_email("""**Subject: Inquiry: Partnership Opportunity for [Your Company Name]**
+
+**From: Alex Chen <alex.chen@examplecompany.com>**
+**To: Sarah Miller <sarah.miller@partnersolutions.com>**
+**Date: Monday, May 12, 2025, 10:00 AM CEST**
+
+Hi Sarah,
+
+I hope this email finds you well.
+
+My name is Alex Chen, and I am the Business Development Manager at Example Company. We specialize in cloud-based software solutions for data analytics and visualization.
+
+I've been following the work of Partner Solutions for some time, particularly your innovative approach to AI-driven marketing strategies. Your recent case study on enhancing customer engagement for e-commerce businesses truly impressed us.
+
+At Example Company, we believe there's a significant synergy between our data analytics platform and your AI marketing expertise. We envision a potential partnership where our clients could leverage your marketing insights, and vice-versa, creating a more comprehensive solution for businesses looking to optimize their operations and outreach.
+
+Would you be open to a brief 20-minute introductory call sometime next week to explore how our companies might collaborate? I'm available on Wednesday, May 21st, or Thursday, May 22nd, in the afternoon.
+
+Please let me know if either of those times works for you, or if you have another preferred time.
+
+Thank you for your time and consideration.
+
+Best regards,
+
+Alex Chen
+Business Development Manager
+Example Company
+www.examplecompany.com
++39 02 1234 5678
+                           
+**Subject: Re: Inquiry: Partnership Opportunity for [Your Company Name]**
+
+**From: Sarah Miller <sarah.miller@partnersolutions.com>**
+**To: Alex Chen <alex.chen@examplecompany.com>**
+**Date: Monday, May 12, 2025, 02:30 PM CEST**
+
+Hi Alex,
+
+Thank you for reaching out! It's great to hear from you.
+
+I appreciate your kind words about our work; we're very proud of our recent e-commerce successes. I agree that a collaboration between our companies could indeed be mutually beneficial, especially given the increasing demand for data-driven marketing solutions.
+
+I'd be happy to schedule an introductory call. Wednesday, May 21st, at 3:00 PM CEST works well for me.
+
+Please send a calendar invite with the meeting link.
+
+Looking forward to speaking with you.
+
+Best,
+
+Sarah Miller
+Head of Partnerships
+Partner Solutions
+www.partnersolutions.com
++39 02 9876 5432""")
+
+    for chunk in stream:
+        await websocket.send_text(chunk)
+        await asyncio.sleep(0.5)  # Simulate processing time
     
     await websocket.close()
 
