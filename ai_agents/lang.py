@@ -109,13 +109,16 @@ def bug_report(state: EmailState) -> Dict[str, Any]:
     """
     response = call_gemini(prompt)
     user = g.get_user()
-    repo = g.get_repo("EXAMPLE")
-    project = repo.get_projects()[0]  
+    repo = g.get_repo("bonsurha/EXAMPLE")
     # Get the first project
     bug_body = response.split(":")[1]
     print(f"Bug body: {bug_body}")
     # Create a new issue in the GitHub repository   
-
+    issue = repo.create_issue(
+        title=f"Bug Report",
+        body=bug_body,
+        labels=["bug", "triage"]
+    )
 
     return {"bug_analysis": response}
 
