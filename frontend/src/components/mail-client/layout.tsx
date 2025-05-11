@@ -6,8 +6,7 @@ import { MailItem } from '@/types/mail';
 import MailList from './mail-list';
 import MailView from './mail-view';
 import { cn } from '@/lib/utils';
-import { Request } from '@/types/utils';
-import { set } from 'date-fns';
+import { DraftRequest, Request } from '@/types/utils';
 
 export default function MailClientLayout() {
   const [mails, setMails] = useState<MailItem[]>([]);
@@ -18,10 +17,12 @@ export default function MailClientLayout() {
     result: null,
     error: false
   });
-  const [draft, setDraft] = useState<Request>({
+  const [draft, setDraft] = useState<DraftRequest>({
     isLoading: false,
     result: null,
-    error: false
+    error: false,
+    thinks: [],
+    isThinking: false
   });
 
   useEffect(() => {
@@ -79,7 +80,13 @@ export default function MailClientLayout() {
     if (selectedMail) {
       // Reset summary and draft when a new mail is selected
       setSummary({ isLoading: true, result: null, error: false });
-      setDraft({ isLoading: true, result: null, error: false });
+      setDraft({
+        isLoading: true,
+        result: null,
+        error: false,
+        thinks: [],
+        isThinking: false
+      });
 
       const summarySocket = new WebSocket(
         `ws://localhost:8000/summary/${selectedMail.id}/ws`
@@ -114,18 +121,35 @@ export default function MailClientLayout() {
       );
 
       draftSocket.onmessage = (event) => {
-        setDraft((old) => ({
-          isLoading: true,
-          result: (old.result || '') + event.data,
-          error: false
-        }));
+        if (
+          event.data.startsWith('<thinking>') &&
+          event.data.endsWith('</thinking>')
+        ) {
+          setDraft((old) => ({
+            isLoading: true,
+            result: old.result,
+            error: false,
+            thinks: old.thinks ? [...old.thinks, event.data] : [event.data],
+            isThinking: true
+          }));
+        } else {
+          setDraft((old) => ({
+            isLoading: true,
+            result: (old.result || '') + event.data,
+            error: false,
+            thinks: old.thinks,
+            isThinking: false
+          }));
+        }
       };
 
       draftSocket.onclose = () => {
         setDraft((old) => ({
           isLoading: false,
           result: old.result,
-          error: false
+          error: false,
+          thinks: old.thinks,
+          isThinking: false
         }));
       };
       draftSocket.onerror = (error) => {
@@ -133,13 +157,21 @@ export default function MailClientLayout() {
         setDraft({
           isLoading: false,
           result: 'Error loading summary.',
-          error: true
+          error: true,
+          thinks: [],
+          isThinking: false
         });
       };
     } else {
       // Clear summary and draft if no mail is selected
       setSummary({ isLoading: false, result: null, error: false });
-      setDraft({ isLoading: false, result: null, error: false });
+      setDraft({
+        isLoading: false,
+        result: null,
+        error: false,
+        thinks: [],
+        isThinking: false
+      });
     }
 
     return () => {};

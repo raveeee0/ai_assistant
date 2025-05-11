@@ -19,14 +19,14 @@ import { toast } from 'sonner'; // Added import for toast
 
 import Markdown from 'react-markdown';
 import { useEffect, useState } from 'react';
-import { Request } from '@/types/utils';
+import { DraftRequest, Request } from '@/types/utils';
 import { cn } from '@/lib/utils';
 
 interface MailViewProps {
   mail: MailItem;
   onBack: () => void;
   summary?: Request;
-  draft?: Request;
+  draft?: DraftRequest;
 }
 
 export default function MailView({
@@ -240,6 +240,11 @@ export default function MailView({
           <div className='text-destructive mb-2 flex items-center text-sm'>
             <AlertCircle className='mr-2 h-4 w-4' />
             Error loading draft: {draft.error}
+          </div>
+        )}
+        {draft?.isThinking && (
+          <div className='mb-2 flex items-center text-sm text-gray-300'>
+            {draft.thinks[draft.thinks.length - 1]}
           </div>
         )}
         <textarea
