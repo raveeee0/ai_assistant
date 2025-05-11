@@ -17,6 +17,41 @@ from email.utils import formatdate
 SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
 
 
+def save_message_to_json(parsed_message, reply=False):
+    # Assicurati che la directory esista
+    os.makedirs("conversations", exist_ok=True)
+
+    # Crea il path del file giornaliero
+    today = datetime.today().strftime("%Y-%m-%d")
+    json_path = os.path.join("conversations", f"conversations_{today}.json")
+
+    # Carica dati esistenti se il file esiste
+    if os.path.exists(json_path):
+        with open(json_path, 'r') as f:
+            data = json.load(f)
+    else:
+        data = {}
+
+    thread_id = parsed_message['thread_id']
+    msg_entry = {
+        "from": parsed_message['senderName'] if not reply else "Support Agent",
+        "email": parsed_message['senderEmail'] if not reply else "support@fitapp.com",
+        "date": parsed_message['date'],
+        "text": parsed_message['text']
+    }
+
+    if thread_id not in data:
+        data[thread_id] = {
+            "subject": parsed_message['subject'],
+            "messages": []
+        }
+
+    if msg_entry not in data[thread_id]["messages"]:
+        data[thread_id]["messages"].append(msg_entry)
+
+    with open(json_path, 'w') as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+
 def authenticate():
     creds = None
     if os.path.exists('token.json'):
@@ -48,6 +83,14 @@ def create_reply_message(to: str, subject: str, message_text: str, thread_id: st
 def send_reply_email(service, to: str, subject: str, message_text: str, thread_id: str, original_message_id: str):
     message = create_reply_message(to, subject, message_text, thread_id, original_message_id)
     sent_message = service.users().messages().send(userId='me', body=message).execute()
+    save_message_to_json({
+        'thread_id': thread_id,
+        'subject': subject,
+        'senderName': "Support Agent",
+        'senderEmail': "support@fitapp.com",
+        'date': datetime.now().strftime("%a, %d %b %Y %H:%M:%S"),
+        'text': message_text
+    }, reply=True)
     print(f"📨 Risposta inviata con ID: {sent_message['id']}")
     return sent_message
 
@@ -68,7 +111,6 @@ def mark_as_read(service, message_id):
 
 def parse_message(service, msg_id):
     msg = service.users().messages().get(userId='me', id=msg_id, format='full').execute()
-    # mark_as_read(service, msg_id)
 
     payload = msg['payload']
     headers = payload.get('headers', [])
@@ -93,7 +135,7 @@ def parse_message(service, msg_id):
             text = base64.urlsafe_b64decode(data).decode('utf-8')
             break
 
-    return {
+    parsed = {
         'message_id': msg['id'],
         'thread_id': msg['threadId'],
         'subject': subject,
@@ -104,6 +146,9 @@ def parse_message(service, msg_id):
         'text': text,
         'original_message_id': original_message_id
     }
+
+    save_message_to_json(parsed)
+    return parsed
 
 
 if __name__ == '__main__':

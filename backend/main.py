@@ -6,7 +6,8 @@ from services.gmail_service import (
     authenticate,
     get_unread_messages,
     parse_message,
-    send_reply_email
+    send_reply_email,
+    mark_as_read
 )
 from googleapiclient.discovery import build
 
@@ -67,3 +68,12 @@ def reply_to_email(request: EmailReplyRequest):
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
+@app.post("/mark-as-read")
+def mark_as_read(message_id: str):
+    try:
+        creds = authenticate()
+        service = build('gmail', 'v1', credentials=creds)
+        result = mark_as_read(service, message_id)
+        return {"status": "success", "result": result["id"]}
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)

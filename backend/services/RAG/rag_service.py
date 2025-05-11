@@ -2,7 +2,6 @@ import numpy as np
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
-import google.generativeai as genai
 from langchain.docstore.document import Document
 from langchain.document_loaders import JSONLoader, TextLoader, PyPDFLoader, CSVLoader
 import os
