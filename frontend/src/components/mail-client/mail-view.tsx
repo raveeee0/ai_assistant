@@ -105,6 +105,17 @@ export default function MailView({
         toast.dismiss(); // Dismiss the loading toast
         toast.success('Reply sent successfully');
         setReply(''); // Clear the reply field after successful send
+
+        // read the email
+        fetch('http://localhost:8000/mark-as-read', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message_id: mail.originalMessageId
+          })
+        });
       })
       .catch((error) => {
         console.error(error);
