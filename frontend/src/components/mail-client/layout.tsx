@@ -109,25 +109,33 @@ export default function MailClientLayout() {
         });
       };
 
-      // Call the API to get the draft
-      fetch(`http://localhost:3000/api/mail/${selectedMail.id}/draft`)
-        .then((response) => {
-          if (response.ok) {
-            return response.json();
-          }
-          throw new Error('Failed to fetch draft');
-        })
-        .then((data) => {
-          setDraft({ isLoading: false, result: data.draft, error: false });
-        })
-        .catch((error) => {
-          console.error(error);
-          setDraft({
-            isLoading: false,
-            result: 'Error loading draft.',
-            error: true
-          });
+      const draftSocket = new WebSocket(
+        `ws://localhost:8000/draft/${selectedMail.id}/ws`
+      );
+
+      draftSocket.onmessage = (event) => {
+        setDraft((old) => ({
+          isLoading: true,
+          result: (old.result || '') + event.data,
+          error: false
+        }));
+      };
+
+      draftSocket.onclose = () => {
+        setDraft((old) => ({
+          isLoading: false,
+          result: old.result,
+          error: false
+        }));
+      };
+      draftSocket.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setDraft({
+          isLoading: false,
+          result: 'Error loading summary.',
+          error: true
         });
+      };
     } else {
       // Clear summary and draft if no mail is selected
       setSummary({ isLoading: false, result: null, error: false });

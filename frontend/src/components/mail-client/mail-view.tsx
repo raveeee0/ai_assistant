@@ -20,6 +20,7 @@ import { toast } from 'sonner'; // Added import for toast
 import Markdown from 'react-markdown';
 import { useEffect, useState } from 'react';
 import { Request } from '@/types/utils';
+import { cn } from '@/lib/utils';
 
 interface MailViewProps {
   mail: MailItem;
@@ -39,7 +40,6 @@ export default function MailView({
 
   useEffect(() => {
     setReply(draft?.result || '');
-    console.log(mail.content);
   }, [draft]);
 
   // Format date for display
@@ -243,7 +243,10 @@ export default function MailView({
           </div>
         )}
         <textarea
-          className='w-full resize-none rounded-md border p-4'
+          className={cn(
+            'w-full resize-none rounded-md border p-4',
+            draft?.isLoading && '!text-gray-500'
+          )}
           placeholder={
             draft?.isLoading
               ? 'Loading draft...'

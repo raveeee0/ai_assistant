@@ -41,15 +41,26 @@ class EmailReplyRequest(BaseModel):
     thread_id: str
     original_message_id: str
 
-@app.websocket("/summary/{summary_id}/ws")
-async def websocket_endpoint(websocket: WebSocket, summary_id: str):
+@app.websocket("/summary/{mail_id}/ws")
+async def websocket_endpoint(websocket: WebSocket, mail_id: str):
     await websocket.accept()
 
     # Create the summary and send it by chunk each 0.5 seconds
     for i in range(5):
         await asyncio.sleep(0.5)
-        await websocket.send_text(f"Message {i + 1} for summary {summary_id}")
+        await websocket.send_text(f"Message {i + 1} for summary {mail_id}")
+    
+    await websocket.close()
 
+@app.websocket("/draft/{mail_id}/ws")
+async def websocket_endpoint(websocket: WebSocket, mail_id: str):
+    await websocket.accept()
+
+    # Create the summary and send it by chunk each 0.5 seconds
+    for i in range(5):
+        await asyncio.sleep(0.5)
+        await websocket.send_text(f"Message {i + 1} for mail {mail_id}")
+    
     await websocket.close()
 
 def get_message_by_rfc822_message_id(service, rfc822_id):
