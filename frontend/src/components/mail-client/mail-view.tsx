@@ -254,7 +254,7 @@ export default function MailView({
           </div>
         )}
         {draft && draft.thinks.length > 0 && (
-          <div className='mb-2 flex items-center text-sm text-gray-300'>
+          <div className='mb-2 text-sm text-gray-300'>
             {draft.thinks.map((think, index) => (
               <p key={index} className='mr-1'>
                 {think}
