@@ -55,14 +55,24 @@ def save_message_to_json(parsed_message, reply=False):
 
 def authenticate():
     creds = None
+    print("1...")
     if os.path.exists('token.json'):
+        print("2...")
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+        print("2.5...")
     if not creds or not creds.valid:
+        print("3...")
         if creds and creds.expired and creds.refresh_token:
+            print("4...")
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
-            creds = flow.run_local_server(port=8080)
+            print("5...")
+            flow = InstalledAppFlow.from_client_secrets_file(
+                'credentials.json',
+                SCOPES,
+                redirect_uri='http://localhost:8080'
+            )
+            creds = flow.run_local_server(prompt='consent', port=8080)
         with open('token.json', 'w') as token:
             token.write(creds.to_json())
     return creds
@@ -94,6 +104,7 @@ def send_reply_email(service, to: str, subject: str, message_text: str, thread_i
         'text': message_text
     }, reply=True)
     print(f"📨 Risposta inviata con ID: {sent_message['id']}")
+    #print(sent_message)
     return sent_message
 
 def get_unread_messages(service):
@@ -152,6 +163,19 @@ def parse_message(service, msg_id):
 
     save_message_to_json(parsed)
     return parsed
+
+
+
+def get_message_by_rfc822_message_id(service, rfc822_id):
+    query = f'rfc822msgid:{rfc822_id}'
+    response = service.users().messages().list(userId='me', q=query).execute()
+    messages = response.get('messages', [])
+
+    if not messages:
+        return None
+
+    message_id = messages[0]['id']
+    return service.users().messages().get(userId='me', id=message_id).execute()
 
 
 if __name__ == '__main__':
