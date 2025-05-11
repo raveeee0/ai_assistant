@@ -182,10 +182,18 @@ export default function MailView({
           <div className='bg-muted/30 mb-4 rounded-md border p-3'>
             <h3 className='mt-1 mb-1 text-sm font-semibold'>Summary:</h3>
             {summary.isLoading ? (
-              <div className='text-muted-foreground flex items-center text-sm italic'>
-                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                Loading summary...
-              </div>
+              summary.result == null || summary.result == '' ? (
+                <div className='text-muted-foreground flex items-center text-sm italic'>
+                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                  Loading summary...
+                </div>
+              ) : (
+                <div className='text-sm'>
+                  <Markdown
+                    children={summary.result || 'No summary available.'}
+                  />
+                </div>
+              )
             ) : summary.error ? (
               <div className='text-destructive flex items-center text-sm'>
                 <AlertCircle className='mr-2 h-4 w-4' />

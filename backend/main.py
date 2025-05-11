@@ -32,38 +32,16 @@ class EmailReplyRequest(BaseModel):
 
 
 
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
+@app.websocket("/summary/{summary_id}/ws")
+async def websocket_endpoint(websocket: WebSocket, summary_id: str):
     await websocket.accept()
 
-    async def sender():
-        while True:
-            await asyncio.sleep(5)
-            await websocket.send_text("⏱️ Messaggio automatico dal server")
-
-    async def receiver():
-        while True:
-            try:
-                data = await websocket.receive_text()
-                print("Ricevuto:", data)
-                await websocket.send_text(f"✅ Ricevuto: {data}")
-            except Exception as e:
-                print("❌ Connessione chiusa:", e)
-                break
-
-    # Avvia entrambi in parallelo
-    send_task = asyncio.create_task(sender())
-    recv_task = asyncio.create_task(receiver())
-
-    # Aspetta che uno dei due finisca (es. client disconnesso)
-    done, pending = await asyncio.wait(
-        [send_task, recv_task],
-        return_when=asyncio.FIRST_COMPLETED
-    )
-
-    # Cancella il task rimasto in attesa
-    for task in pending:
-        task.cancel()
+    # Create the summary and send it by chunk each 0.5 seconds
+    for i in range(5):
+        await asyncio.sleep(0.5)
+        await websocket.send_text(f"Message {i + 1} for summary {summary_id}")
+    
+    await websocket.close()
 
 @app.get("/")
 def read_root():

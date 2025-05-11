@@ -7,6 +7,7 @@ import MailList from './mail-list';
 import MailView from './mail-view';
 import { cn } from '@/lib/utils';
 import { Request } from '@/types/utils';
+import { set } from 'date-fns';
 
 export default function MailClientLayout() {
   const [mails, setMails] = useState<MailItem[]>([]);
@@ -70,25 +71,33 @@ export default function MailClientLayout() {
       setSummary({ isLoading: true, result: null, error: false });
       setDraft({ isLoading: true, result: null, error: false });
 
-      // Call the API to get the summary
-      fetch(`http://localhost:3000/api/mail/${selectedMail.id}/summary`)
-        .then((response) => {
-          if (response.ok) {
-            return response.json();
-          }
-          throw new Error('Failed to fetch summary');
-        })
-        .then((data) => {
-          setSummary({ isLoading: false, result: data.summary, error: false });
-        })
-        .catch((error) => {
-          console.error(error);
-          setSummary({
-            isLoading: false,
-            result: 'Error loading summary.',
-            error: true
-          });
+      const summarySocket = new WebSocket(
+        `ws://localhost:8000/summary/${selectedMail.id}/ws`
+      );
+
+      summarySocket.onmessage = (event) => {
+        setSummary((old) => ({
+          isLoading: true,
+          result: (old.result || '') + event.data,
+          error: false
+        }));
+      };
+
+      summarySocket.onclose = () => {
+        setSummary((old) => ({
+          isLoading: false,
+          result: old.result,
+          error: false
+        }));
+      };
+      summarySocket.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setSummary({
+          isLoading: false,
+          result: 'Error loading summary.',
+          error: true
         });
+      };
 
       // Call the API to get the draft
       fetch(`http://localhost:3000/api/mail/${selectedMail.id}/draft`)
