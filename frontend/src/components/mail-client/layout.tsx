@@ -77,6 +77,9 @@ export default function MailClientLayout() {
   };
 
   useEffect(() => {
+    let summarySocket: WebSocket | null = null;
+    let draftSocket: WebSocket | null = null;
+
     if (selectedMail) {
       // Reset summary and draft when a new mail is selected
       setSummary({ isLoading: true, result: null, error: false });
@@ -88,7 +91,8 @@ export default function MailClientLayout() {
         isThinking: false
       });
 
-      const summarySocket = new WebSocket(
+      // Create new WebSocket connections
+      summarySocket = new WebSocket(
         `ws://localhost:8000/summary/${selectedMail.id}/ws`
       );
 
@@ -107,8 +111,9 @@ export default function MailClientLayout() {
           error: false
         }));
       };
+
       summarySocket.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        console.error('Summary WebSocket error:', error);
         setSummary({
           isLoading: false,
           result: 'Error loading summary.',
@@ -116,7 +121,7 @@ export default function MailClientLayout() {
         });
       };
 
-      const draftSocket = new WebSocket(
+      draftSocket = new WebSocket(
         `ws://localhost:8000/draft/${selectedMail.id}/ws`
       );
 
@@ -156,11 +161,12 @@ export default function MailClientLayout() {
           isThinking: false
         }));
       };
+
       draftSocket.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        console.error('Draft WebSocket error:', error);
         setDraft({
           isLoading: false,
-          result: 'Error loading summary.',
+          result: 'Error loading draft.',
           error: true,
           thinks: [],
           isThinking: false
@@ -178,7 +184,19 @@ export default function MailClientLayout() {
       });
     }
 
-    return () => {};
+    return () => {
+      if (summarySocket) {
+        console.log('Closing summary WebSocket connection');
+        summarySocket.close();
+        summarySocket = null;
+      }
+
+      if (draftSocket) {
+        console.log('Closing draft WebSocket connection');
+        draftSocket.close();
+        draftSocket = null;
+      }
+    };
   }, [selectedMail]);
 
   return (

@@ -109,7 +109,9 @@ async def websocket_summary(websocket: WebSocket, mail_id: str):
             await asyncio.sleep(0.5)
 
     except Exception as e:
-        await websocket.send_text(f"❌ Error: {str(e)}")
+        # check if the socket is still open before sending a message
+        if websocket.client_state == WebSocket.OPEN:
+            await websocket.send_text(f"❌ Error: {str(e)}")
     finally:
         await websocket.close()
 
@@ -143,46 +145,14 @@ async def websocket_draft(websocket: WebSocket, mail_id: str):
             await websocket.send_text(chunk)
             await asyncio.sleep(0.5)
 
-
     except Exception as e:
-        await websocket.send_text(f"❌ Error: {str(e)}")
+        # check if the socket is still open before sending a message
+        if websocket.client_state == WebSocket.OPEN:
+            await websocket.send_text(f"❌ Error: {str(e)}")
 
     finally:
         await websocket.close()
 
-
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    await websocket.accept()
-
-    async def sender():
-        while True:
-            await asyncio.sleep(5)
-            await websocket.send_text("⏱️ Messaggio automatico dal server")
-
-    async def receiver():
-        while True:
-            try:
-                data = await websocket.receive_text()
-                print("Ricevuto:", data)
-                await websocket.send_text(f"✅ Ricevuto: {data}")
-            except Exception as e:
-                print("❌ Connessione chiusa:", e)
-                break
-
-    # Avvia entrambi in parallelo
-    send_task = asyncio.create_task(sender())
-    recv_task = asyncio.create_task(receiver())
-
-    # Aspetta che uno dei due finisca (es. client disconnesso)
-    done, pending = await asyncio.wait(
-        [send_task, recv_task],
-        return_when=asyncio.FIRST_COMPLETED
-    )
-
-    # Cancella il task rimasto in attesa
-    for task in pending:
-        task.cancel()
 
 @app.get("/")
 def read_root():
