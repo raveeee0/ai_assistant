@@ -9,9 +9,10 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 import requests
 from email import message_from_bytes
-from email.mime.text import MIMEText  # AGGIUNGI QUESTO IMPORT
+from email.mime.text import MIMEText
 from datetime import datetime
 from email.utils import formatdate
+import markdown
 
 # Scope per lettura Gmail
 SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
@@ -65,11 +66,12 @@ def authenticate():
         with open('token.json', 'w') as token:
             token.write(creds.to_json())
     return creds
-
 def create_reply_message(to: str, subject: str, message_text: str, thread_id: str, original_message_id: str):
-    message = MIMEText(message_text)
+    # Convert markdown to HTML
+    html_content = markdown.markdown(message_text)
+    message = MIMEText(html_content, 'html', 'utf-8')
     message['to'] = to
-    message['subject'] = f"Re: {subject}"
+    message['subject'] = subject if subject.startswith("Re: ") else f"Re: {subject}"
     message['In-Reply-To'] = original_message_id
     message['References'] = original_message_id
     message['Date'] = formatdate(localtime=True)
