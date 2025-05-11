@@ -37,6 +37,7 @@ export default function MailView({
 
   useEffect(() => {
     setReply(draft?.result || '');
+    console.log(mail.content);
   }, [draft]);
 
   // Format date for display
@@ -53,6 +54,24 @@ export default function MailView({
 
   const sendEmail = () => {
     // send post request to api
+    // Create quoted original message with header
+    const quoteHeader = `On ${mail.date.toLocaleString([], {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })} ${mail.sender.name} <${mail.sender.email}> wrote:`;
+
+    // Format the original content with '>' prefix for each line
+    const quotedContent = mail.content
+      ? `${quoteHeader}\n>${mail.content.split('\n').join('\n> ')}`
+      : '';
+
+    // Combine reply with quoted original message
+    const fullReplyContent = `${reply}\n\n${quotedContent}`;
+
     fetch('http://localhost:8000/reply-mail', {
       method: 'POST',
       headers: {
@@ -63,7 +82,7 @@ export default function MailView({
         subject: mail.subject,
         original_message_id: mail.originalMessageId,
         thread_id: mail.threadId,
-        message: reply
+        message: fullReplyContent
       })
     })
       .then((data) => {
@@ -181,7 +200,7 @@ export default function MailView({
             )}
           </div>
         )}
-        <Markdown children={mail.content} />
+        <Markdown>{mail.content}</Markdown>
       </div>
 
       {/* Reply section */}

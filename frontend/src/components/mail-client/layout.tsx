@@ -30,8 +30,6 @@ export default function MailClientLayout() {
     fetch('http://127.0.0.1:8000/unread-mails').then((response) => {
       if (response.ok) {
         response.json().then((data) => {
-          console.log('Fetched mails:', data);
-          // Convert API response data to MailItem format
           const formattedMails = data.messages.map(
             (mail: {
               message_id: string;
@@ -57,7 +55,6 @@ export default function MailClientLayout() {
               content: mail.text
             })
           );
-          console.log('Formatted mails:', formattedMails);
 
           setMails(formattedMails);
         });

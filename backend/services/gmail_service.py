@@ -135,6 +135,7 @@ def parse_message(service, msg_id):
         if part['mimeType'] == 'text/plain':
             data = part['body']['data']
             text = base64.urlsafe_b64decode(data).decode('utf-8')
+            print(text)
             break
 
     parsed = {
