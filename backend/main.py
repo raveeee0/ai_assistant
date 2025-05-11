@@ -30,8 +30,6 @@ class EmailReplyRequest(BaseModel):
     thread_id: str
     original_message_id: str
 
-
-
 @app.websocket("/summary/{summary_id}/ws")
 async def websocket_endpoint(websocket: WebSocket, summary_id: str):
     await websocket.accept()

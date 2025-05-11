@@ -15,6 +15,7 @@ import {
   AlertCircle // Added for error icon
 } from 'lucide-react';
 import { MailItem } from '@/types/mail';
+import { toast } from 'sonner'; // Added import for toast
 
 import Markdown from 'react-markdown';
 import { useEffect, useState } from 'react';
@@ -34,6 +35,7 @@ export default function MailView({
   draft
 }: MailViewProps) {
   const [reply, setReply] = useState('');
+  const [isSending, setIsSending] = useState(false); // Added state for tracking send status
 
   useEffect(() => {
     setReply(draft?.result || '');
@@ -53,7 +55,15 @@ export default function MailView({
   };
 
   const sendEmail = () => {
-    // send post request to api
+    // Don't send if reply is empty
+    if (!reply.trim()) {
+      toast.error('Cannot send empty reply');
+      return;
+    }
+
+    setIsSending(true); // Set sending state to true
+    toast.loading('Sending reply...'); // Show loading toast
+
     // Create quoted original message with header
     const quoteHeader = `On ${mail.date.toLocaleString([], {
       weekday: 'short',
@@ -85,11 +95,25 @@ export default function MailView({
         message: fullReplyContent
       })
     })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Failed to send email');
+        }
+        return response.json();
+      })
       .then((data) => {
         console.log('Email sent successfully:', data);
+        toast.dismiss(); // Dismiss the loading toast
+        toast.success('Reply sent successfully');
+        setReply(''); // Clear the reply field after successful send
       })
       .catch((error) => {
         console.error(error);
+        toast.dismiss(); // Dismiss the loading toast
+        toast.error(`Failed to send: ${error.message}`);
+      })
+      .finally(() => {
+        setIsSending(false); // Reset sending state
       });
   };
 
@@ -229,11 +253,23 @@ export default function MailView({
           rows={4}
           value={reply} // Use reply state, fallback to draft result
           onChange={(e) => setReply(e.target.value)}
-          disabled={draft?.isLoading}
+          disabled={draft?.isLoading || isSending}
         ></textarea>
         <div className='mt-2 flex justify-end'>
-          <Button className='cursor-pointer gap-1' onClick={() => sendEmail()}>
-            <Reply size={14} /> Send
+          <Button
+            className='cursor-pointer gap-1'
+            onClick={() => sendEmail()}
+            disabled={isSending}
+          >
+            {isSending ? (
+              <>
+                <Loader2 size={14} className='animate-spin' /> Sending...
+              </>
+            ) : (
+              <>
+                <Reply size={14} /> Send
+              </>
+            )}
           </Button>
         </div>
       </div>
