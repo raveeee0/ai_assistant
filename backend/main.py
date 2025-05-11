@@ -104,7 +104,7 @@ www.partnersolutions.com
 
     for chunk in stream:
         await websocket.send_text(chunk)
-        await asyncio.sleep(0.5)  # Simulate processing time
+        await asyncio.sleep(0.2)  # Simulate processing time
     
     await websocket.close()
 

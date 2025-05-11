@@ -58,15 +58,14 @@ gemini_model = GoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GOOGL
 #     response = gemini_model.invoke(prompt)
 #     return response.strip()
 
-def call_gemini(prompt: str) -> str:
+def call_gemini(prompt: str, stream: bool = False) -> str:
     logger.info(f"LLM Prompt: {prompt}")
     try:
         response = ""
         for chunk in gemini_model.stream(prompt):
-            chunk_text = chunk
-            response += chunk_text
-            print(chunk_text)
-            yield chunk_text
+            response += chunk
+            if stream:
+                yield chunk
         return response
     except Exception as e:
         logger.error(f"Error calling Gemini: {e}")
@@ -305,17 +304,16 @@ def process_email(username: str,email_subject: str, email_body: str, user_email:
         destination_email=user_email,
         is_reply=False
     )
-    final_state = app.invoke(initial_state)
+    final_state = app.stream(initial_state)
     logger.info("Final Draft:\n%s", final_state["draft"])
 
 
-def summary_email(state: EmailState) -> Dict[str, Any]:
+def summary_email(state: str) -> Dict[str, Any]:
     prompt = f"""
         Summarize the email content: {state}
         Output format:
         - summary
     """
-    response = call_gemini(prompt)
-    for chunk in response:
-        print(chunk)
+    stream = call_gemini(prompt, True)
+    for chunk in stream:
         yield chunk
