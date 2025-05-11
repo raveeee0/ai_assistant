@@ -55,14 +55,13 @@ export default function MailView({
   };
 
   const sendEmail = () => {
-    // Don't send if reply is empty
     if (!reply.trim()) {
       toast.error('Cannot send empty reply');
       return;
     }
 
-    setIsSending(true); // Set sending state to true
-    toast.loading('Sending reply...'); // Show loading toast
+    setIsSending(true);
+    toast.loading('Sending reply...');
 
     // Create quoted original message with header
     const quoteHeader = `On ${mail.date.toLocaleString([], {

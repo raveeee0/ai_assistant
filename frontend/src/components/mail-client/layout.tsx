@@ -11,6 +11,7 @@ import { set } from 'date-fns';
 
 export default function MailClientLayout() {
   const [mails, setMails] = useState<MailItem[]>([]);
+  const [isLoadingMails, setIsLoadingMails] = useState<boolean>(true); // Added loading state
   const [selectedMail, setSelectedMail] = useState<MailItem | null>(null);
   const [summary, setSummary] = useState<Request>({
     isLoading: false,
@@ -28,41 +29,50 @@ export default function MailClientLayout() {
   }, []);
 
   const refreshMails = () => {
-    fetch('http://127.0.0.1:8000/unread-mails').then((response) => {
-      if (response.ok) {
-        response.json().then((data) => {
-          const formattedMails = data.messages.map(
-            (mail: {
-              message_id: string;
-              original_message_id: string;
-              thread_id: string;
-              senderName: string;
-              senderEmail: string;
-              subject: string;
-              snippet: string;
-              date: string | number | Date;
-              text: string;
-            }) => ({
-              id: mail.message_id,
-              originalMessageId: mail.original_message_id,
-              threadId: mail.thread_id,
-              sender: {
-                name: mail.senderName,
-                email: mail.senderEmail
-              },
-              subject: mail.subject,
-              snippet: mail.snippet,
-              date: new Date(mail.date),
-              content: mail.text
-            })
-          );
+    setIsLoadingMails(true); // Set loading to true when starting to fetch
 
-          setMails(formattedMails);
-        });
-      } else {
-        console.error('Failed to fetch mails');
-      }
-    });
+    fetch('http://127.0.0.1:8000/unread-mails')
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        }
+        throw new Error('Failed to fetch mails');
+      })
+      .then((data) => {
+        const formattedMails = data.messages.map(
+          (mail: {
+            message_id: string;
+            original_message_id: string;
+            thread_id: string;
+            senderName: string;
+            senderEmail: string;
+            subject: string;
+            snippet: string;
+            date: string | number | Date;
+            text: string;
+          }) => ({
+            id: mail.message_id,
+            originalMessageId: mail.original_message_id,
+            threadId: mail.thread_id,
+            sender: {
+              name: mail.senderName,
+              email: mail.senderEmail
+            },
+            subject: mail.subject,
+            snippet: mail.snippet,
+            date: new Date(mail.date),
+            content: mail.text
+          })
+        );
+
+        setMails(formattedMails);
+      })
+      .catch((error) => {
+        console.error('Failed to fetch mails:', error);
+      })
+      .finally(() => {
+        setIsLoadingMails(false); // Set loading to false when done
+      });
   };
 
   useEffect(() => {
@@ -147,6 +157,7 @@ export default function MailClientLayout() {
           selectedMailId={selectedMail?.id}
           mails={mails}
           refreshMails={refreshMails}
+          isLoading={isLoadingMails}
         />
       </div>
 
@@ -159,9 +170,13 @@ export default function MailClientLayout() {
             summary={summary}
             draft={draft}
           />
+        ) : isLoadingMails ? (
+          <div className='text-muted-foreground flex h-full items-center justify-center'>
+            Loading emails...
+          </div>
         ) : (
           <div className='text-muted-foreground flex h-full items-center justify-center'>
-            Select an email to view
+            {mails.length > 0 ? 'Select an email to view' : 'No emails found'}
           </div>
         )}
       </div>
