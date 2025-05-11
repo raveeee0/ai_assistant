@@ -5,6 +5,7 @@ export interface MailSender {
 
 export interface MailItem {
   id: string;
+  originalMessageId: string;
   threadId: string;
   sender: MailSender;
   subject: string;

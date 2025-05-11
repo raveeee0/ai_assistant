@@ -61,7 +61,7 @@ export default function MailView({
       body: JSON.stringify({
         to: mail.sender.email,
         subject: mail.subject,
-        original_message_id: mail.id,
+        original_message_id: mail.originalMessageId,
         thread_id: mail.threadId,
         message: reply
       })

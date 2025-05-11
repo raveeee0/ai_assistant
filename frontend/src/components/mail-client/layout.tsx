@@ -34,16 +34,18 @@ export default function MailClientLayout() {
           // Convert API response data to MailItem format
           const formattedMails = data.messages.map(
             (mail: {
-              message_id: any;
-              thread_id: any;
-              senderName: any;
-              senderEmail: any;
-              subject: any;
-              snippet: any;
+              message_id: string;
+              original_message_id: string;
+              thread_id: string;
+              senderName: string;
+              senderEmail: string;
+              subject: string;
+              snippet: string;
               date: string | number | Date;
-              text: any;
+              text: string;
             }) => ({
               id: mail.message_id,
+              originalMessageId: mail.original_message_id,
               threadId: mail.thread_id,
               sender: {
                 name: mail.senderName,
@@ -55,6 +57,8 @@ export default function MailClientLayout() {
               content: mail.text
             })
           );
+          console.log('Formatted mails:', formattedMails);
+
           setMails(formattedMails);
         });
       } else {

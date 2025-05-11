@@ -34,8 +34,8 @@ export default function MailList({
           <Button
             variant='ghost'
             size='icon'
-            className='h-8 w-8'
-            onClick={() => refreshMails}
+            className='h-8 w-8 cursor-pointer'
+            onClick={() => refreshMails()}
           >
             <RefreshCcw size={16} />
           </Button>

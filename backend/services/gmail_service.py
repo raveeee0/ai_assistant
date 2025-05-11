@@ -34,9 +34,9 @@ def authenticate():
 def create_reply_message(to: str, subject: str, message_text: str, thread_id: str, original_message_id: str):
     message = MIMEText(message_text)
     message['to'] = to
-    message['subject'] = subject if subject.startswith("Re: ") else f"Re: {subject}"
-    message['In-Reply-To'] = f"<{original_message_id}>"
-    message['References'] = f"<{original_message_id}>"
+    message['subject'] = f"Re: {subject}"
+    message['In-Reply-To'] = original_message_id
+    message['References'] = original_message_id
     message['Date'] = formatdate(localtime=True)
 
     raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
