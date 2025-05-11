@@ -80,7 +80,7 @@ def categorize_problem(state: EmailState) -> Dict[str, Any]:
 
     prompt = f"""
         Classify the email with subject: {state.subject}, content: {state.email_content} into one of these categories:
-        username_change, password_reset, refund_request, bug_repor or other
+        username_change, password_reset, refund_request, bug_report, faq or other
     """
     response = call_gemini(prompt)
     category = f"<thinking> categorize problem ... {response} </thinking>"
