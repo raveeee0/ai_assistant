@@ -125,11 +125,15 @@ export default function MailClientLayout() {
           event.data.startsWith('<thinking>') &&
           event.data.endsWith('</thinking>')
         ) {
+          const think = event.data.slice(
+            '<thinking>'.length,
+            event.data.indexOf('</thinking>')
+          );
           setDraft((old) => ({
             isLoading: true,
             result: old.result,
             error: false,
-            thinks: old.thinks ? [...old.thinks, event.data] : [event.data],
+            thinks: old.thinks ? [...old.thinks, think] : [think],
             isThinking: true
           }));
         } else {
