@@ -253,9 +253,13 @@ export default function MailView({
             Error loading draft: {draft.error}
           </div>
         )}
-        {draft?.isThinking && (
+        {draft && draft.thinks.length > 0 && (
           <div className='mb-2 flex items-center text-sm text-gray-300'>
-            {draft.thinks[draft.thinks.length - 1]}
+            {draft.thinks.map((think, index) => (
+              <p key={index} className='mr-1'>
+                {think}
+              </p>
+            ))}
           </div>
         )}
         <textarea
