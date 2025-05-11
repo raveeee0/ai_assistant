@@ -37,13 +37,6 @@ export default function MailList({
   refreshMails,
   isLoading = false
 }: MailListProps) {
-  // Auto-select first email on component mount
-  useEffect(() => {
-    if (mails.length > 0 && !selectedMailId && !isLoading) {
-      onSelectMail(mails[0]);
-    }
-  }, [mails, onSelectMail, selectedMailId, isLoading]);
-
   return (
     <div className='flex flex-1 flex-col overflow-hidden'>
       <div className='bg-background flex gap-4 border-b p-2'>
