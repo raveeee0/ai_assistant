@@ -15,7 +15,7 @@ print(f"Executing directory: {os.getcwd()}")
 
 from services.RAG.rag_service import RAGModule
 # Initialize RAG module
-rag = RAGModule(index_path="../faiss_index/", model_name="all-MiniLM-L6-v2")
+rag = RAGModule(index_path="./faiss_index/", model_name="all-MiniLM-L6-v2")
 
 
 # Load environment variables
@@ -78,7 +78,7 @@ def call_gemini(prompt: str, stream: bool = False) -> str:
 
 def categorize_problem(state: EmailState) -> Dict[str, Any]:
 
-    writer = get_stream_writer()  
+    writer = get_stream_writer()
     writer({"custom_key": "<thinking> categorize problem </thinking>"})
 
     prompt = f"""
@@ -94,7 +94,7 @@ def account_management(state: EmailState) -> Dict[str, Any]:
 
     if "password" in state.problem_type.lower():
 
-        writer = get_stream_writer()  
+        writer = get_stream_writer()
         writer({"custom_key": "<thinking> generate password reset link </thinking>"})
 
         def generate_password_reset_link():
@@ -106,7 +106,7 @@ def account_management(state: EmailState) -> Dict[str, Any]:
         state.link = generate_password_reset_link()
     elif "username" in state.problem_type.lower():
 
-        writer = get_stream_writer()  
+        writer = get_stream_writer()
         writer({"custom_key": "<thinking> generate username reset link </thinking>"})
 
         def generate_username_change_link():
@@ -126,7 +126,7 @@ def account_management(state: EmailState) -> Dict[str, Any]:
 
 def bug_report(state: EmailState) -> Dict[str, Any]:
 
-    writer = get_stream_writer()  
+    writer = get_stream_writer()
     writer({"custom_key": "<thinking> create ticket for the bug </thinking>"})
 
     prompt = f"""
@@ -152,7 +152,7 @@ def bug_report(state: EmailState) -> Dict[str, Any]:
 
 def faq_answer(state: EmailState) -> Dict[str, Any]:
 
-    writer = get_stream_writer()  
+    writer = get_stream_writer()
     writer({"custom_key": "<thinking> retrieve data from knoledge based </thinking>"})
 
     rag_response = rag.generate_context(state.email_content)
@@ -169,7 +169,7 @@ def faq_answer(state: EmailState) -> Dict[str, Any]:
 
 def check_compliance(state: EmailState) -> Dict[str, Any]:
 
-    writer = get_stream_writer()  
+    writer = get_stream_writer()
     writer({"custom_key": "<thinking> retrieve data from knoledge based </thinking>"})
 
     rag_response = rag.generate_context("What is the company policy for refund requests?")
@@ -184,7 +184,7 @@ def check_compliance(state: EmailState) -> Dict[str, Any]:
 
 def generate_draft(state: EmailState) -> Dict[str, Any]:
 
-    writer = get_stream_writer()  
+    writer = get_stream_writer()
     writer({"custom_key": "<thinking> Generating draft email </thinking>"})
 
     print(f"Content: {state}")
@@ -332,7 +332,7 @@ def process_email(username: str,email_subject: str, email_body: str, user_email:
     writer = get_stream_writer()
     stream = app.stream(initial_state)
     for chunk in stream:
-        writer(chunk) 
+        writer(chunk)
 
 
 def summary_email(state: str) -> Dict[str, Any]:

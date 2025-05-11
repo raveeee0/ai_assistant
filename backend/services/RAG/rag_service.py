@@ -9,7 +9,7 @@ import os
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=50, chunk_overlap=10)
 
 class RAGModule:
-    def __init__(self, index_path="../faiss_index", model_name="all-MiniLM-L6-v2"):
+    def __init__(self, index_path="./faiss_index", model_name="all-MiniLM-L6-v2"):
         # Embedding + vector store
         self.embedding_model = HuggingFaceEmbeddings(model_name=model_name)
         try:

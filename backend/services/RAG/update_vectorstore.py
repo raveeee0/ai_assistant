@@ -7,7 +7,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.docstore.document import Document
 
 CONVERSATION_DIR = "../../conversations"
-VECTORSTORE_DIR = "faiss_index"
+VECTORSTORE_DIR = "../../faiss_index"
 EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
 def get_today_filename():

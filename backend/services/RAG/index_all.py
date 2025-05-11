@@ -26,7 +26,7 @@ DATA_PATHS = {
     # "../data/daily_reports_01052025.csv": "csv",
     # Aggiungi qui altri file e i loro tipi
 }
-INDEX_PATH = "faiss_index"
+INDEX_PATH = "../../faiss_index"
 EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 CHUNK_SIZE = 1000  # Dimensione dei chunk
 CHUNK_OVERLAP = 200  # Sovrapposizione tra i chunk
