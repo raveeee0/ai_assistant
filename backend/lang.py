@@ -321,14 +321,8 @@ app = graph.compile()
 # Step 6: Run the Workflow
 # -------------------------------
 
-def process_email(username: str,email_subject: str, email_body: str, user_email: str):
-    initial_state = EmailState(
-        username=username,
-        subject=email_subject,
-        email_content=email_body,
-        destination_email=user_email,
-        is_reply=False
-    )
+def process_email(initial_state: EmailState):
+
     writer = get_stream_writer()
     stream = app.stream(initial_state)
     for chunk in stream:
