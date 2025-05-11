@@ -1,4 +1,4 @@
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -107,11 +107,10 @@ async def websocket_summary(websocket: WebSocket, mail_id: str):
         for chunk in stream:
             await websocket.send_text(chunk)
             await asyncio.sleep(0.5)
-
+    except WebSocketDisconnect:
+        pass
     except Exception as e:
-        # check if the socket is still open before sending a message
-        if websocket.client_state == WebSocket.OPEN:
-            await websocket.send_text(f"❌ Error: {str(e)}")
+        await websocket.send_text(f"❌ Error: {str(e)}")
     finally:
         await websocket.close()
 
@@ -145,10 +144,10 @@ async def websocket_draft(websocket: WebSocket, mail_id: str):
             await websocket.send_text(chunk)
             await asyncio.sleep(0.5)
 
+    except WebSocketDisconnect:
+        pass
     except Exception as e:
-        # check if the socket is still open before sending a message
-        if websocket.client_state == WebSocket.OPEN:
-            await websocket.send_text(f"❌ Error: {str(e)}")
+        await websocket.send_text(f"❌ Error: {str(e)}")
 
     finally:
         await websocket.close()
