@@ -3,6 +3,7 @@ from typing import Optional, List, Dict, Any
 from langgraph.graph import StateGraph, END
 from langchain_google_genai import GoogleGenerativeAI
 from github import Github
+from fastapi import FastAPI, WebSocket
 import os
 import logging
 import random
@@ -51,12 +52,29 @@ class EmailState(BaseModel):
 # Step 2: Gemini Model Setup
 # -------------------------------
 
-gemini_model = GoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GOOGLE_API_KEY)
+gemini_model = GoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=GOOGLE_API_KEY, stream=True)
+
+# def call_gemini(prompt: str) -> str:
+#     logger.info(f"LLM Prompt: {prompt}")
+#     response = gemini_model.invoke(prompt)
+#     return response.strip()
 
 def call_gemini(prompt: str) -> str:
     logger.info(f"LLM Prompt: {prompt}")
-    response = gemini_model.invoke(prompt)
-    return response.strip()
+    full_response = ""
+
+    response = gemini_model.generate_content(prompt, stream=True)
+    
+    try:
+        
+        for chunk in response:
+            yield chunk
+            full_response += chunk.text
+    except Exception as e:
+        logger.error(f"Error during streaming: {e}")
+        return ""
+    
+    return full_response
 
 # -------------------------------
 # Step 3: Define Agent Nodes
@@ -68,6 +86,7 @@ Classify the email with subject: {state.subject}, content: {state.email_content}
 username_change, password_reset, refund_request, bug_report, faq
     """
     response = call_gemini(prompt)
+
 
     # update counter of problem types on excel using Google Sheets API
 
@@ -293,6 +312,13 @@ def process_email(username: str,email_subject: str, email_body: str, user_email:
     final_state = app.invoke(initial_state)
     logger.info("Final Draft:\n%s", final_state["draft"])
 
-# Example usage
-if __name__ == "__main__":
-    process_email("maradona", "gui error", "gui is broken", "user@example.com")
+
+def summary_email(state: EmailState) -> Dict[str, Any]:
+    prompt = f"""
+        Summarize the email content: {state.email_content}
+        Output format:
+        - summary
+    """
+    response = call_gemini(prompt)
+    state.summary = response
+    return {"summary": response}
