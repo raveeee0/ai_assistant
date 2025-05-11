@@ -21,6 +21,7 @@ import Markdown from 'react-markdown';
 import { useEffect, useState } from 'react';
 import { DraftRequest, Request } from '@/types/utils';
 import { cn } from '@/lib/utils';
+import { Badge } from '../ui/badge';
 
 interface MailViewProps {
   mail: MailItem;
@@ -259,6 +260,13 @@ export default function MailView({
               <p key={index} className='mr-1'>
                 {think}
               </p>
+            ))}
+          </div>
+        )}
+        {draft && draft.actions.length > 0 && (
+          <div className='mb-2 flex items-center gap-2 text-sm text-gray-300'>
+            {draft.actions.map((action, index) => (
+              <Badge key={index}>{action}</Badge>
             ))}
           </div>
         )}

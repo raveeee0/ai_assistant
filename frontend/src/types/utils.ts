@@ -9,5 +9,6 @@ export interface DraftRequest {
   result: string | null;
   error: boolean;
   thinks: string[];
+  actions: string[];
   isThinking: boolean;
 }

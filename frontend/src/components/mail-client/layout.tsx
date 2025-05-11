@@ -22,7 +22,8 @@ export default function MailClientLayout() {
     result: null,
     error: false,
     thinks: [],
-    isThinking: false
+    isThinking: false,
+    actions: []
   });
 
   useEffect(() => {
@@ -88,7 +89,8 @@ export default function MailClientLayout() {
         result: null,
         error: false,
         thinks: [],
-        isThinking: false
+        isThinking: false,
+        actions: []
       });
 
       // Create new WebSocket connections
@@ -126,20 +128,30 @@ export default function MailClientLayout() {
       );
 
       draftSocket.onmessage = (event) => {
-        if (
-          event.data.startsWith('<thinking>') &&
-          event.data.endsWith('</thinking>')
-        ) {
-          const think = event.data.slice(
-            '<thinking>'.length,
-            event.data.indexOf('</thinking>')
-          );
+        const thinkingRegex = /^<thinking>(.*?)<\/thinking>$/;
+        const actionRegex = /^<action>(.*?)<\/action>$/;
+        const thinkingMatch = event.data.match(thinkingRegex);
+        const actionMatch = event.data.match(actionRegex);
+
+        if (thinkingMatch) {
+          const think = thinkingMatch[1];
           setDraft((old) => ({
             isLoading: true,
             result: old.result,
             error: false,
             thinks: old.thinks ? [...old.thinks, think] : [think],
-            isThinking: true
+            isThinking: true,
+            actions: old.actions
+          }));
+        } else if (actionMatch) {
+          const action = actionMatch[1];
+          setDraft((old) => ({
+            isLoading: true,
+            result: old.result,
+            error: false,
+            thinks: old.thinks,
+            isThinking: false,
+            actions: old.actions ? [...old.actions, action] : [action]
           }));
         } else {
           setDraft((old) => ({
@@ -147,7 +159,8 @@ export default function MailClientLayout() {
             result: (old.result || '') + event.data,
             error: false,
             thinks: old.thinks,
-            isThinking: false
+            isThinking: false,
+            actions: old.actions
           }));
         }
       };
@@ -158,7 +171,8 @@ export default function MailClientLayout() {
           result: old.result,
           error: false,
           thinks: old.thinks,
-          isThinking: false
+          isThinking: false,
+          actions: []
         }));
       };
 
@@ -169,7 +183,8 @@ export default function MailClientLayout() {
           result: 'Error loading draft.',
           error: true,
           thinks: [],
-          isThinking: false
+          isThinking: false,
+          actions: []
         });
       };
     } else {
@@ -180,10 +195,12 @@ export default function MailClientLayout() {
         result: null,
         error: false,
         thinks: [],
-        isThinking: false
+        isThinking: false,
+        actions: []
       });
     }
 
+    // - Email is deselected
     return () => {
       if (summarySocket) {
         console.log('Closing summary WebSocket connection');
